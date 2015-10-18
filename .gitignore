@@ -13,3 +13,6 @@
 /http-client-saxon/build/
 /http-client-saxon/dist/
 /http-client-saxon/src/org/expath/httpclient/saxon/version.properties
+
+/http-client-java/target/
+/http-client-saxon/target/
