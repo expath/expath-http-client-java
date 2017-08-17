@@ -11,13 +11,13 @@ package org.expath.httpclient.impl;
 
 import java.io.*;
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -26,7 +26,6 @@ import org.apache.http.client.CookieStore;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentProducer;
 import org.apache.http.entity.EntityTemplate;
@@ -56,7 +55,8 @@ public class ApacheHttpConnection
         myVersion = DEFAULT_HTTP_VERSION;
     }
 
-    public void connect(HttpRequestBody body, HttpCredentials cred)
+    @Override
+    public void connect(final HttpRequestBody body, final HttpCredentials cred)
             throws HttpClientException
     {
         if ( myRequest == null ) {
@@ -67,7 +67,15 @@ public class ApacheHttpConnection
 
         try {
             // make a new client
-            final CloseableHttpClient myClient = makeClient();
+            if(myClient == null) {
+                myClient = makeClient();
+            }
+
+            if(myResponse != null) {
+                // close any previous response
+                myResponse.close();
+            }
+
             // set the credentials (if any)
             final HttpClientContext clientContext = setCredentials(cred);
             // set the request entity body (if any)
@@ -124,8 +132,19 @@ public class ApacheHttpConnection
     }
 
     @Override
-    public void disconnect() {
-        clientConnectionManager.shutdown();
+    public void disconnect() throws HttpClientException {
+        try {
+            if(myResponse != null) {
+                myResponse.close();
+                myResponse = null;
+            }
+
+            myClient.close();
+            myClient = null;
+        } catch (final IOException ex) {
+            final String message = getMessage(ex);
+            throw new HttpClientException(message, ex);
+        }
     }
 
     @Override
@@ -299,8 +318,9 @@ public class ApacheHttpConnection
      */
     private CloseableHttpClient makeClient() {
 
-        final HttpClientBuilder clientBuilder = HttpClientBuilder.create();
-        clientBuilder.setConnectionManager(clientConnectionManager);
+        final HttpClientBuilder clientBuilder = HttpClientBuilder.create()
+            .setConnectionManager(POOLING_CONNECTION_MANAGER)
+            .setConnectionManagerShared(true);
 
         // use the default JVM proxy settings (http.proxyHost, etc.)
         clientBuilder.setRoutePlanner(new SystemDefaultRoutePlanner(null));
@@ -418,15 +438,21 @@ public class ApacheHttpConnection
         POST_CONNECT
     }
 
-    private final HttpClientConnectionManager clientConnectionManager = new BasicHttpClientConnectionManager();
+    private static final PoolingHttpClientConnectionManager POOLING_CONNECTION_MANAGER
+            = new PoolingHttpClientConnectionManager(15, TimeUnit.MINUTES); //TODO(AR) make configurable
+    static {
+        POOLING_CONNECTION_MANAGER.setMaxTotal(40); //TODO(AR) make configurable
+    }
     private State state = State.INITIAL;
 
     /** The target URI. */
     private URI myUri;
+    /** The Apache client. */
+    private CloseableHttpClient myClient;
     /** The Apache request. */
     private HttpRequestBase myRequest;
     /** The Apache response. */
-    private HttpResponse myResponse;
+    private CloseableHttpResponse myResponse;
     /** The HTTP protocol version. */
     private HttpVersion myVersion;
     /** Follow HTTP redirect? */
