@@ -103,8 +103,31 @@ public class ApacheHttpConnection
             }
         }
         catch ( IOException ex ) {
-            throw new HttpClientException("Error executing the HTTP method: " + ex.getMessage(), ex);
+            final String message = getMessage(ex);
+            throw new HttpClientException("Error executing the HTTP method: " + message != null ? message : "<unknown>", ex);
         }
+    }
+
+    /**
+     * Retrieves a message from the Throwable
+     * or its cause (recursively).
+     *
+     * @param throwable A thrown exception
+     *
+     * @return The first message, or null if there are no messages
+     *     at all.
+     */
+    private String getMessage(final Throwable throwable) {
+        if(throwable.getMessage() != null) {
+            return throwable.getMessage();
+        }
+
+        final Throwable cause = throwable.getCause();
+        if(cause == null || cause == throwable) {
+            return null;
+        }
+
+        return getMessage(cause);
     }
 
     public void disconnect()
