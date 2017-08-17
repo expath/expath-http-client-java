@@ -299,6 +299,7 @@ public class ApacheHttpConnection
             HttpConnectionParams.setConnectionTimeout(params, myTimeout * 1000);
             HttpConnectionParams.setSoTimeout(params, myTimeout * 1000);
         }
+
         // the shared cookie store
         client.setCookieStore(COOKIES);
         // the HTTP version (1.0 or 1.1)
@@ -359,6 +360,7 @@ public class ApacheHttpConnection
             ContentProducer producer = new RequestBodyProducer(body);
             EntityTemplate template = new EntityTemplate(producer);
             template.setContentType(body.getContentType());
+            template.setChunked(true);
             entity = template;
         }
         else {
