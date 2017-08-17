@@ -12,6 +12,7 @@ package org.expath.httpclient.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.logging.Log;
@@ -177,29 +178,33 @@ public class MultipartResponseBody
             throw new HttpClientException("impossible to find the content type");
         }
         ContentType type = new ContentType(h);
-        switch ( BodyFactory.parseType(type) ) {
-            case XML: {
-                // TODO: 'content_type' is the header Content-Type without any
-                // param (i.e. "text/xml".)  Should we keep this, or put the
-                // whole header (i.e. "text/xml; charset=utf-8")? (and for
-                // other types as well...)
-                Reader in = parser.getReader();
-                return new XmlResponseBody(result, in, type, headers, false);
+        try {
+            switch (BodyFactory.parseType(type)) {
+                case XML: {
+                    // TODO: 'content_type' is the header Content-Type without any
+                    // param (i.e. "text/xml".)  Should we keep this, or put the
+                    // whole header (i.e. "text/xml; charset=utf-8")? (and for
+                    // other types as well...)
+                    Reader in = parser.getReader();
+                    return new XmlResponseBody(result, in, type, headers, false);
+                }
+                case HTML: {
+                    Reader in = parser.getReader();
+                    return new XmlResponseBody(result, in, type, headers, true);
+                }
+                case TEXT: {
+                    Reader in = parser.getReader();
+                    return new TextResponseBody(result, in, type, headers);
+                }
+                case BINARY: {
+                    InputStream in = parser.getInputStream();
+                    return new BinaryResponseBody(result, in, type, headers);
+                }
+                default:
+                    throw new HttpClientException("INTERNAL ERROR: cannot happen");
             }
-            case HTML: {
-                Reader in = parser.getReader();
-                return new XmlResponseBody(result, in, type, headers, true);
-            }
-            case TEXT: {
-                Reader in = parser.getReader();
-                return new TextResponseBody(result, in, type, headers);
-            }
-            case BINARY: {
-                InputStream in = parser.getInputStream();
-                return new BinaryResponseBody(result, in, type, headers);
-            }
-            default:
-                throw new HttpClientException("INTERNAL ERROR: cannot happen");
+        } catch (UnsupportedEncodingException ex) {
+            throw new HttpClientException("Unable to parse response part", ex);
         }
     }
 
