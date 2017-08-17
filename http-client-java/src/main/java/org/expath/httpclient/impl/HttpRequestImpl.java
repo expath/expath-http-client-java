@@ -47,6 +47,10 @@ public class HttpRequestImpl
         if ( myTimeout != null ) {
             conn.setTimeout(myTimeout);
         }
+        if ( myGzip ) {
+            conn.setGzip(true);
+        }
+
         conn.setFollowRedirect(myFollowRedirect);
         conn.connect(myBody, cred);
         int status = conn.getResponseStatus();
@@ -169,6 +173,11 @@ public class HttpRequestImpl
         myTimeout = seconds;
     }
 
+    @Override
+    public void setGzip(final boolean gzip) {
+        myGzip = gzip;
+    }
+
     private String myMethod;
     private String myHref;
     private String myHttpVer;
@@ -176,6 +185,7 @@ public class HttpRequestImpl
     private boolean myStatusOnly;
     private boolean myFollowRedirect = true;
     private Integer myTimeout = null;
+    private boolean myGzip = false;
     private HeaderSet myHeaders;
     private HttpRequestBody myBody;
     private static final Log LOG = LogFactory.getLog(HttpRequestImpl.class);

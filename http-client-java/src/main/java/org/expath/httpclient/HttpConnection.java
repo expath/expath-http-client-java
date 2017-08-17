@@ -34,6 +34,7 @@ public interface HttpConnection
             throws HttpClientException;
     public void setFollowRedirect(boolean follow);
     public void setTimeout(int seconds);
+    public void setGzip(boolean gzip);
     // responses...
     public int getResponseStatus()
             throws HttpClientException;

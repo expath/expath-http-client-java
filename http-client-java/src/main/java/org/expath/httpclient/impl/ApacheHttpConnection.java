@@ -12,6 +12,7 @@ package org.expath.httpclient.impl;
 import java.io.*;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPOutputStream;
 
 import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.logging.Log;
@@ -24,6 +25,7 @@ import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.entity.GzipCompressingEntity;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.ByteArrayEntity;
@@ -31,6 +33,7 @@ import org.apache.http.entity.ContentProducer;
 import org.apache.http.entity.EntityTemplate;
 import org.apache.http.impl.client.*;
 import org.apache.http.impl.conn.*;
+import org.apache.http.protocol.HTTP;
 import org.expath.httpclient.HeaderSet;
 import org.expath.httpclient.HttpClientException;
 import org.expath.httpclient.HttpConnection;
@@ -226,6 +229,11 @@ public class ApacheHttpConnection
         myTimeout = seconds;
     }
 
+    @Override
+    public void setGzip(final boolean gzip) {
+        myGzip = gzip;
+    }
+
     /**
      * Check the method name does match the HTTP/1.1 production rules.
      *
@@ -406,14 +414,26 @@ public class ApacheHttpConnection
             EntityTemplate template = new EntityTemplate(producer);
             template.setContentType(body.getContentType());
             template.setChunked(true);
-            entity = template;
+
+            if(myGzip) {
+                entity = new GzipCompressingEntity(template);
+            } else {
+                entity = template;
+            }
         }
         else {
             // With HTTP 1.0, chunked encoding is not supported, so first
             // serialize into memory and use the resulting byte array as the
             // entity payload.
             try (final ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
-                body.serialize(buffer);
+                if(myGzip) {
+                    try (final GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
+                        body.serialize(gzip);
+                    }
+                    myRequest.setHeader(HTTP.CONTENT_ENCODING, "gzip");
+                } else {
+                    body.serialize(buffer);
+                }
                 entity = new ByteArrayEntity(buffer.toByteArray());
             } catch (final IOException e) {
                 throw new HttpClientException(e.getMessage(), e);
@@ -459,6 +479,9 @@ public class ApacheHttpConnection
     private boolean myFollowRedirect = true;
     /** The timeout to use, in seconds, or null for default. */
     private Integer myTimeout = null;
+    /** whether we should use gzip transfer encoding */
+    private boolean myGzip = false;
+
     /**
      * The shared cookie store.
      *

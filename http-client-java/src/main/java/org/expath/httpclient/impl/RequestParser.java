@@ -127,6 +127,9 @@ public class RequestParser
             else if ( "timeout".equals(local) ) {
                 req.setTimeout(toInteger(a));
             }
+            else if ( "gzip".equals(local) ) {
+                req.setGzip(toBoolean(a));
+            }
             else {
                 throw new HttpClientException("Unknown attribute http:request/@" + local);
             }

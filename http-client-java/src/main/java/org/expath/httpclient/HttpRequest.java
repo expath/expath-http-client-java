@@ -34,6 +34,7 @@ public interface HttpRequest
     public void setStatusOnly(boolean only);
     public void setFollowRedirect(boolean follow);
     public void setTimeout(Integer seconds);
+    public void setGzip(boolean gzip);
 }
 
 
