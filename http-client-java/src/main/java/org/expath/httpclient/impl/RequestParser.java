@@ -217,6 +217,15 @@ public class RequestParser
         if ( name == null || value == null ) {
             throw new HttpClientException("@name and @value are required on http:header");
         }
+
+        if(name.equalsIgnoreCase("Content-Length")) {
+            throw new HttpClientException("Content-Length should not be explicitly provided, either it will automatically be added or Transfer-Encoding will be used.");
+        }
+
+        if(name.equalsIgnoreCase("Transfer-Encoding")) {
+            throw new HttpClientException("Transfer-Encoding should not be explicitly provided, it will automatically be added if required.");
+        }
+
         // actually add the header
         headers.add(name, value);
     }
