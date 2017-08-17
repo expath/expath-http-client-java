@@ -10,8 +10,9 @@
 package org.expath.httpclient.impl;
 
 import java.io.*;
-import java.net.ProxySelector;
 import java.net.URI;
+
+import net.jcip.annotations.NotThreadSafe;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
@@ -22,28 +23,15 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CookieStore;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpOptions;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpTrace;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.conn.routing.HttpRoutePlanner;
-import org.apache.http.entity.AbstractHttpEntity;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.*;
+import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentProducer;
 import org.apache.http.entity.EntityTemplate;
-import org.apache.http.impl.client.AbstractHttpClient;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.ProxySelectorRoutePlanner;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
-import org.apache.http.util.Args;
+import org.apache.http.impl.client.*;
+import org.apache.http.impl.conn.*;
 import org.expath.httpclient.HeaderSet;
 import org.expath.httpclient.HttpClientException;
 import org.expath.httpclient.HttpConnection;
@@ -56,6 +44,7 @@ import org.expath.httpclient.HttpRequestBody;
  *
  * @author Florent Georges
  */
+@NotThreadSafe
 public class ApacheHttpConnection
         implements HttpConnection
 {
@@ -65,7 +54,6 @@ public class ApacheHttpConnection
         myRequest = null;
         myResponse = null;
         myVersion = DEFAULT_HTTP_VERSION;
-        myClient = null;
     }
 
     public void connect(HttpRequestBody body, HttpCredentials cred)
@@ -74,11 +62,14 @@ public class ApacheHttpConnection
         if ( myRequest == null ) {
             throw new HttpClientException("setRequestMethod has not been called before");
         }
+
+        myRequest.setProtocolVersion(myVersion);
+
         try {
             // make a new client
-            myClient = makeClient();
+            final CloseableHttpClient myClient = makeClient();
             // set the credentials (if any)
-            setCredentials(cred);
+            final HttpClientContext clientContext = setCredentials(cred);
             // set the request entity body (if any)
             setRequestEntity(body);
             // log the request headers?
@@ -89,7 +80,7 @@ public class ApacheHttpConnection
                 LoggerHelper.logCookies(LOG, "COOKIES", COOKIES.getCookies());
             }
             // send the request
-            myResponse = myClient.execute(myRequest);
+            myResponse = myClient.execute(myRequest, clientContext);
 
             // TODO: Handle 'Connection' headers (for instance "Connection: close")
             // See for instance http://www.jmarshall.com/easy/http/.
@@ -105,6 +96,8 @@ public class ApacheHttpConnection
         catch ( IOException ex ) {
             final String message = getMessage(ex);
             throw new HttpClientException("Error executing the HTTP method: " + message != null ? message : "<unknown>", ex);
+        } finally {
+            state = State.POST_CONNECT;
         }
     }
 
@@ -130,17 +123,16 @@ public class ApacheHttpConnection
         return getMessage(cause);
     }
 
-    public void disconnect()
-    {
-        if ( myClient != null ) {
-            myClient.getConnectionManager().shutdown();
-        }
+    @Override
+    public void disconnect() {
+        clientConnectionManager.shutdown();
     }
 
-    public void setHttpVersion(String ver)
+    @Override
+    public void setHttpVersion(final String ver)
             throws HttpClientException
     {
-        if ( myClient != null ) {
+        if ( state != State.INITIAL ) {
             String msg = "Internal error, HTTP version cannot been "
                     + "set after connect() has been called.";
             throw new HttpClientException(msg);
@@ -305,41 +297,48 @@ public class ApacheHttpConnection
     /**
      * Make a new Apache HTTP client, in order to serve this request.
      */
-    private AbstractHttpClient makeClient()
-    {
-        AbstractHttpClient client = new DefaultHttpClient();
-        HttpParams params = client.getParams();
+    private CloseableHttpClient makeClient() {
+
+        final HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+        clientBuilder.setConnectionManager(clientConnectionManager);
+
         // use the default JVM proxy settings (http.proxyHost, etc.)
-        HttpRoutePlanner route = new ProxySelectorRoutePlanner(
-                client.getConnectionManager().getSchemeRegistry(),
-                ProxySelector.getDefault());
-        client.setRoutePlanner(route);
+        clientBuilder.setRoutePlanner(new SystemDefaultRoutePlanner(null));
+
         // do follow redirections?
-        params.setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, myFollowRedirect);
-        // set the timeout if any
-        if ( myTimeout != null ) {
-            // See http://blog.jayway.com/2009/03/17/configuring-timeout-with-apache-httpclient-40/
-            HttpConnectionParams.setConnectionTimeout(params, myTimeout * 1000);
-            HttpConnectionParams.setSoTimeout(params, myTimeout * 1000);
+        if(myFollowRedirect) {
+            clientBuilder.setRedirectStrategy(LaxRedirectStrategy.INSTANCE);
         }
 
         // the shared cookie store
-        client.setCookieStore(COOKIES);
-        // the HTTP version (1.0 or 1.1)
-        params.setParameter("http.protocol.version", myVersion);
-        // return the just built client
+        clientBuilder.setDefaultCookieStore(COOKIES);
+
+        // set the timeout if any
+        final RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
+        if(myTimeout != null) {
+            // See http://blog.jayway.com/2009/03/17/configuring-timeout-with-apache-httpclient-40/
+            requestConfigBuilder
+                    .setConnectTimeout(myTimeout * 1000)
+                    .setSocketTimeout(myTimeout * 1000);
+        }
+        clientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
+
+        final CloseableHttpClient client = clientBuilder.build();
         return client;
     }
 
     /**
      * Set the credentials on the client, based on the {@link HttpCredentials} object.
      */
-    private void setCredentials(HttpCredentials cred)
+    private HttpClientContext setCredentials(HttpCredentials cred)
             throws HttpClientException
     {
+        final HttpClientContext clientContext = HttpClientContext.create();
+
         if ( cred == null ) {
-            return;
+            return clientContext;
         }
+
         URI uri = myRequest.getURI();
         int port = uri.getPort();
         if ( port == -1 ) {
@@ -361,9 +360,12 @@ public class ApacheHttpConnection
             LOG.debug("Set credentials for " + host + ":" + port
                     + " - " + user + " - ***");
         }
-        Credentials c = new UsernamePasswordCredentials(user, pwd);
-        AuthScope scope = new AuthScope(host, port);
-        myClient.getCredentialsProvider().setCredentials(scope, c);
+
+        final Credentials c = new UsernamePasswordCredentials(user, pwd);
+        final AuthScope scope = new AuthScope(host, port);
+
+        clientContext.getCredentialsProvider().setCredentials(scope, c);
+        return clientContext;
     }
 
     /**
@@ -411,16 +413,22 @@ public class ApacheHttpConnection
         req.setEntity(entity);
     }
 
+    private enum State {
+        INITIAL,
+        POST_CONNECT
+    }
+
+    private final HttpClientConnectionManager clientConnectionManager = new BasicHttpClientConnectionManager();
+    private State state = State.INITIAL;
+
     /** The target URI. */
     private URI myUri;
     /** The Apache request. */
-    private HttpUriRequest myRequest;
+    private HttpRequestBase myRequest;
     /** The Apache response. */
     private HttpResponse myResponse;
     /** The HTTP protocol version. */
     private HttpVersion myVersion;
-    /** The Apache client. */
-    private AbstractHttpClient myClient;
     /** Follow HTTP redirect? */
     private boolean myFollowRedirect = true;
     /** The timeout to use, in seconds, or null for default. */

@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.ProxySelector;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
@@ -21,21 +20,20 @@ import java.security.cert.CertificateFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.conn.routing.HttpRoutePlanner;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.entity.ContentProducer;
 import org.apache.http.entity.EntityTemplate;
-import org.apache.http.impl.client.AbstractHttpClient;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.ProxySelectorRoutePlanner;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import javax.net.ssl.SSLContext;
 
 /**
  *
@@ -45,14 +43,16 @@ public class ApacheHttpClientTest
 {
     @Test
     public void testGetMethod()
-            throws ClientProtocolException, IOException
+            throws IOException
     {
         HttpGet get = new HttpGet("http://www.fgeorges.org/");
-        HttpResponse response = getClient().execute(get);
-        System.err.println("Status: " + response.getStatusLine().getStatusCode());
-        System.err.print("Content: ");
-        response.getEntity().writeTo(System.err);
-        System.err.println();
+        try(final CloseableHttpClient client = getClient()) {
+            HttpResponse response = client.execute(get);
+            System.err.println("Status: " + response.getStatusLine().getStatusCode());
+            System.err.print("Content: ");
+            response.getEntity().writeTo(System.err);
+            System.err.println();
+        }
     }
 
     /**
@@ -60,70 +60,80 @@ public class ApacheHttpClientTest
      */
     @Test
     public void testGoogleAuth()
-            throws ClientProtocolException, IOException
+            throws IOException
     {
         HttpPost post = new HttpPost("https://www.google.com/accounts/ClientLogin");
         ContentProducer producer = new StringProducer(AUTH_CONTENT);
         EntityTemplate entity = new EntityTemplate(producer);
         entity.setContentType(FORM_TYPE);
         post.setEntity(entity);
-        HttpResponse resp = getClient().execute(post);
-        System.err.println("Status: " + resp.getStatusLine().getStatusCode());
-        System.err.print("Content: ");
-        resp.getEntity().writeTo(System.err);
-        System.err.println();
+        try(final CloseableHttpClient client = getClient()) {
+            HttpResponse resp = client.execute(post);
+            System.err.println("Status: " + resp.getStatusLine().getStatusCode());
+            System.err.print("Content: ");
+            resp.getEntity().writeTo(System.err);
+            System.err.println();
+        }
     }
 
     @Test
     public void testGoogleRedirect()
-            throws ClientProtocolException, IOException
+            throws IOException
     {
         HttpPost post = new HttpPost("https://www.google.com/accounts/ClientLogin");
         ContentProducer producer = new StringProducer(AUTH_CONTENT);
         EntityTemplate entity = new EntityTemplate(producer);
         entity.setContentType(FORM_TYPE);
         post.setEntity(entity);
-        AbstractHttpClient client = getClient();
-        HttpResponse resp = client.execute(post);
-        System.err.println("POST status: " + resp.getStatusLine().getStatusCode());
         String token = null;
-        for ( String s : getStringContent(resp).split("\n") ) {
-            if ( s.startsWith("Auth=") ) {
-                token = s.substring(5);
+        try(final CloseableHttpClient client = getClient()) {
+            HttpResponse resp = client.execute(post);
+            System.err.println("POST status: " + resp.getStatusLine().getStatusCode());
+            for (String s : getStringContent(resp).split("\n")) {
+                if (s.startsWith("Auth=")) {
+                    token = s.substring(5);
+                }
             }
+            System.err.println("Token: " + token);
         }
-        System.err.println("Token: " + token);
+
         // GetMethod get = new GetMethod("https://www.google.com/calendar/feeds/default/allcalendars/full");
         HttpGet get = new HttpGet("http://www.google.com/calendar/feeds/xmlprague.cz_k0rlr8da52ivmgp6eujip041s8%40group.calendar.google.com/private/full");
         get.setHeader("GData-Version", "2");
         get.setHeader("Authorization", "GoogleLogin auth=" + token);
         // get.setFollowRedirects(false);
-        resp = client.execute(get);
-        System.err.println("GET status: " + resp.getStatusLine().getStatusCode());
-        for ( Cookie c : client.getCookieStore().getCookies() ) {
-            System.err.println("Cookie: " + c.getName() + ", " + c.getValue());
-        }
-        for ( String s : client.getCookieSpecs().getSpecNames() ) {
-            System.err.println("Cookie spec: " + s);
-        }
-        if ( resp.getStatusLine().getStatusCode() == 302 ) {
-            client = getClient();
-            resp = client.execute(get);
+        HttpClientContext context = HttpClientContext.create();
+        try(final CloseableHttpClient client = getClient()) {
+            HttpResponse resp = client.execute(get, context);
             System.err.println("GET status: " + resp.getStatusLine().getStatusCode());
+
+            for (Cookie c : context.getCookieStore().getCookies()) {
+                System.err.println("Cookie: " + c.getName() + ", " + c.getValue());
+            }
+            System.err.println("Cookie spec: " + context.getCookieSpec());
+
+            if (resp.getStatusLine().getStatusCode() == 302) {
+                try(final CloseableHttpClient client2 = getClient()) {
+                    final HttpResponse resp2 = client2.execute(get);
+                    System.err.println("GET status: " + resp2.getStatusLine().getStatusCode());
+                }
+            }
         }
+
         HttpGet get2 = new HttpGet("http://www.google.com/calendar/feeds/xmlprague.cz_k0rlr8da52ivmgp6eujip041s8%40group.calendar.google.com/private/full");
         get2.setHeader("GData-Version", "2");
         get2.setHeader("Authorization", "GoogleLogin auth=" + token);
         // get2.setFollowRedirects(false);
-        client = getClient();
-        resp = client.execute(get2);
-        System.err.println("GET 2 status: " + resp.getStatusLine().getStatusCode());
+        try(final CloseableHttpClient client = getClient()) {
+            HttpResponse resp = client.execute(get2);
+            System.err.println("GET 2 status: " + resp.getStatusLine().getStatusCode());
+        }
     }
 
     @Ignore("Broken authentication?!?")
     @Test
     public void testGoogleAddAgenda()
-            throws ClientProtocolException, IOException
+            throws IOException
     {
         System.err.println();
         System.err.println("***** [testGoogleAddAgenda]");
@@ -137,8 +147,8 @@ public class ApacheHttpClientTest
         System.err.println("***** [/testGoogleAddAgenda]");
     }
 
-    public HttpResponse testGoogleAddAgenda_1(String token, String uri)
-            throws ClientProtocolException, IOException
+    private HttpResponse testGoogleAddAgenda_1(String token, String uri)
+            throws IOException
     {
         HttpPost post = new HttpPost(uri);
         post.setHeader("GData-Version", "2");
@@ -146,19 +156,21 @@ public class ApacheHttpClientTest
         EntityTemplate entity = new EntityTemplate(new StringProducer(AGENDA_ENTRY));
         entity.setContentType(ATOM_TYPE);
         post.setEntity(entity);
-        HttpResponse resp = getClient().execute(post);
-        System.err.println("POST status: " + resp.getStatusLine().getStatusCode());
-        System.err.println("POST message: " + resp.getStatusLine().getReasonPhrase());
-        System.err.print("POST response content: ");
-        resp.getEntity().writeTo(System.err);
-        System.err.println();
-        return resp;
+        try(final CloseableHttpClient client = getClient()) {
+            HttpResponse resp = client.execute(post);
+            System.err.println("POST status: " + resp.getStatusLine().getStatusCode());
+            System.err.println("POST message: " + resp.getStatusLine().getReasonPhrase());
+            System.err.print("POST response content: ");
+            resp.getEntity().writeTo(System.err);
+            System.err.println();
+            return resp;
+        }
     }
 
     @Ignore("Broken authentication?!?")
     @Test
     public void testGoogleAddAgendaStd()
-            throws ClientProtocolException, IOException, URISyntaxException
+            throws IOException, URISyntaxException
     {
         System.err.println();
         System.err.println("***** [testGoogleAddAgendaStd]");
@@ -174,7 +186,7 @@ public class ApacheHttpClientTest
     }
 
     private HttpURLConnection testGoogleAddAgendaStd_1(String token, URI uri)
-            throws ClientProtocolException, IOException, URISyntaxException
+            throws IOException, URISyntaxException
     {
         HttpURLConnection conn = (HttpURLConnection) uri.toURL().openConnection();
         conn.setRequestMethod("POST");
@@ -200,44 +212,48 @@ public class ApacheHttpClientTest
         EntityTemplate entity = new EntityTemplate(new StringProducer(AUTH_CONTENT));
         entity.setContentType(FORM_TYPE);
         auth.setEntity(entity);
-        HttpResponse resp = getClient().execute(auth);
-        System.err.println("AUTH status: " + resp.getStatusLine().getStatusCode());
-        String token = null;
-        for ( String s : getStringContent(resp).split("\n") ) {
-            System.err.println("AUTH content line: " + s);
-            if ( s.startsWith("Auth=") ) {
-                token = s.substring(5);
+        try(final CloseableHttpClient client = getClient()) {
+            HttpResponse resp = client.execute(auth);
+            System.err.println("AUTH status: " + resp.getStatusLine().getStatusCode());
+            String token = null;
+            for (String s : getStringContent(resp).split("\n")) {
+                System.err.println("AUTH content line: " + s);
+                if (s.startsWith("Auth=")) {
+                    token = s.substring(5);
+                }
             }
+            if (token == null) {
+                throw new RuntimeException("Token is null!");
+            }
+            return token;
         }
-        if ( token == null ) {
-            throw new RuntimeException("Token is null!");
-        }
-        return token;
     }
 
     @Test
     public void testResponseBody()
-            throws ClientProtocolException, IOException, URISyntaxException
+            throws IOException, URISyntaxException
     {
         System.err.println();
         System.err.println("***** [testResponseBody]");
         HttpGet get = new HttpGet("http://www.fgeorges.org/tmp/xproc-fixed-alternative.mpr-");
-        HttpResponse resp = getClient().execute(get);
-        System.err.println("Status: " + resp.getStatusLine().getStatusCode());
-        HttpEntity entity = resp.getEntity();
-        System.err.println("Entity class: " + entity.getClass());
-        System.err.println("Entity type: " + entity.getContentType());
-        System.err.println("Entity encoding: " + entity.getContentEncoding());
-        System.err.println("Entity is chunck: " + entity.isChunked());
-        System.err.println("Entity is repeat: " + entity.isRepeatable());
-        System.err.println("Entity is stream: " + entity.isStreaming());
-        System.err.println("***** [/testResponseBody]");
+        try(final CloseableHttpClient client = getClient()) {
+            HttpResponse resp = client.execute(get);
+            System.err.println("Status: " + resp.getStatusLine().getStatusCode());
+            HttpEntity entity = resp.getEntity();
+            System.err.println("Entity class: " + entity.getClass());
+            System.err.println("Entity type: " + entity.getContentType());
+            System.err.println("Entity encoding: " + entity.getContentEncoding());
+            System.err.println("Entity is chunck: " + entity.isChunked());
+            System.err.println("Entity is repeat: " + entity.isRepeatable());
+            System.err.println("Entity is stream: " + entity.isStreaming());
+            System.err.println("***** [/testResponseBody]");
+        }
     }
 
     @Ignore("Need a certificate file, see 'Unable to find the certificate file' below")
     @Test
     public void testTrustSelfSignedKeys()
-            throws ClientProtocolException, IOException, URISyntaxException,
+            throws IOException, URISyntaxException,
                    KeyStoreException, NoSuchAlgorithmException,
                    CertificateException, KeyManagementException, UnrecoverableKeyException
     {
@@ -255,24 +271,28 @@ public class ApacheHttpClientTest
         InputStream in = new FileInputStream(in_f);
         Certificate certif = factory.generateCertificate(in);
         trustStore.setCertificateEntry("fgeorges.org", certif);
-        SSLSocketFactory socketFactory = new SSLSocketFactory(trustStore);
-        Scheme sch = new Scheme("https", socketFactory, 443);
-        AbstractHttpClient client = getClient();
-        client.getConnectionManager().getSchemeRegistry().register(sch);
-        // </TODO>
 
-        System.err.println();
-        System.err.println("***** [testTrustSelfSignedKeys]");
-        HttpGet get = new HttpGet("https://www.fgeorges.org/");
-        //HttpGet get = new HttpGet("https://mail.google.com/");
-        HttpResponse resp = client.execute(get);
-        System.err.println("Status: " + resp.getStatusLine().getStatusCode());
-        System.err.println("***** [/testTrustSelfSignedKeys]");
+        final SSLContext sslContext = SSLContextBuilder.create()
+                .loadTrustMaterial(trustStore, null)
+                .build();
+
+        try (CloseableHttpClient client = getClient(sslContext)) {
+
+            // </TODO>
+
+            System.err.println();
+            System.err.println("***** [testTrustSelfSignedKeys]");
+            HttpGet get = new HttpGet("https://www.fgeorges.org/");
+            //HttpGet get = new HttpGet("https://mail.google.com/");
+            HttpResponse resp = client.execute(get);
+            System.err.println("Status: " + resp.getStatusLine().getStatusCode());
+            System.err.println("***** [/testTrustSelfSignedKeys]");
+        }
     }
 
     @Test
     public void testXProcPost()
-            throws ClientProtocolException, IOException, URISyntaxException
+            throws IOException, URISyntaxException
     {
         System.err.println();
         System.err.println("***** [testXProcPost]");
@@ -284,7 +304,7 @@ public class ApacheHttpClientTest
 
     @Test
     public void testFGeorgesPost()
-            throws ClientProtocolException, IOException, URISyntaxException
+            throws IOException, URISyntaxException
     {
         System.err.println();
         System.err.println("***** [testFGeorgesPost]");
@@ -295,31 +315,32 @@ public class ApacheHttpClientTest
     }
 
     private void doPost(String uri, String content, String type)
-            throws ClientProtocolException, IOException, URISyntaxException
+            throws IOException, URISyntaxException
     {
         HttpPost post = new HttpPost(uri);
         EntityTemplate entity = new EntityTemplate(new StringProducer(content));
         entity.setContentType(type);
         post.setEntity(entity);
-        AbstractHttpClient client = getClient();
-        System.err.println("DEBUG: CLIENT: " + client.getClass());
-        HttpResponse resp = client.execute(post);
-        System.err.println("Status: " + resp.getStatusLine().getStatusCode());
-        HttpEntity body = resp.getEntity();
-        System.err.println("Entity class: " + body.getClass());
-        System.err.println("Entity type: " + body.getContentType());
-        System.err.println("Entity encoding: " + body.getContentEncoding());
-        System.err.println("Entity is chunck: " + body.isChunked());
-        System.err.println("Entity is repeat: " + body.isRepeatable());
-        System.err.println("Entity is stream: " + body.isStreaming());
-        System.err.println("Entity body: ");
-        body.writeTo(System.err);
-        System.err.println();
+        try(CloseableHttpClient client = getClient()) {
+            System.err.println("DEBUG: CLIENT: " + client.getClass());
+            HttpResponse resp = client.execute(post);
+            System.err.println("Status: " + resp.getStatusLine().getStatusCode());
+            HttpEntity body = resp.getEntity();
+            System.err.println("Entity class: " + body.getClass());
+            System.err.println("Entity type: " + body.getContentType());
+            System.err.println("Entity encoding: " + body.getContentEncoding());
+            System.err.println("Entity is chunck: " + body.isChunked());
+            System.err.println("Entity is repeat: " + body.isRepeatable());
+            System.err.println("Entity is stream: " + body.isStreaming());
+            System.err.println("Entity body: ");
+            body.writeTo(System.err);
+            System.err.println();
+        }
     }
 
     @Test
     public void testPost()
-            throws ClientProtocolException, IOException, URISyntaxException
+            throws IOException, URISyntaxException
     {
         System.err.println();
         System.err.println("***** [testPost]");
@@ -328,10 +349,12 @@ public class ApacheHttpClientTest
         EntityTemplate entity = new EntityTemplate(new StringProducer("<content/>"));
         entity.setContentType(XML_TYPE);
         post.setEntity(entity);
-        HttpResponse resp = getClient().execute(post);
-        System.err.println("Status: " + resp.getStatusLine().getStatusCode());
-        System.err.println();
-        System.err.println("***** [/testPost]");
+        try(CloseableHttpClient client = getClient()) {
+            HttpResponse resp = client.execute(post);
+            System.err.println("Status: " + resp.getStatusLine().getStatusCode());
+            System.err.println();
+            System.err.println("***** [/testPost]");
+        }
     }
 
     private String getStringContent(HttpResponse resp)
@@ -364,23 +387,30 @@ public class ApacheHttpClientTest
         private byte[] myContent;
     }
 
-    private static AbstractHttpClient getClient()
+    private static CloseableHttpClient getClient()
     {
         // FIXME: TODO: How to manage and reuse connections?  In test cases, but
         // also in production code...
-        return makeNewClient();
+        return getClient(null);
 //        return CLIENT;
     }
 
-    private static AbstractHttpClient makeNewClient()
+    private static CloseableHttpClient getClient(final SSLContext sslContext)
     {
-        AbstractHttpClient client = new DefaultHttpClient();
-        HttpRoutePlanner routePlanner = new ProxySelectorRoutePlanner(
-             client.getConnectionManager().getSchemeRegistry(),
-             ProxySelector.getDefault());
-        client.setRoutePlanner(routePlanner);
-        client.getParams().setBooleanParameter(ClientPNames.HANDLE_REDIRECTS, false);
-        return client;
+        // FIXME: TODO: How to manage and reuse connections?  In test cases, but
+        // also in production code...
+        return makeNewClient(sslContext);
+//        return CLIENT;
+    }
+
+    private static CloseableHttpClient makeNewClient(final SSLContext sslContext)
+    {
+        final HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+        if(sslContext != null) {
+            clientBuilder.setSSLContext(sslContext);
+        }
+        clientBuilder.setRoutePlanner(new SystemDefaultRoutePlanner(null));
+        return clientBuilder.build();
     }
 
     static {
@@ -397,7 +427,7 @@ public class ApacheHttpClientTest
     private static final String FORM_TYPE = "application/x-www-form-urlencoded";
     private static final String ATOM_TYPE = "application/atom+xml";
     private static final String XML_TYPE  = "application/xml";
-    private static final AbstractHttpClient CLIENT = makeNewClient();
+    private static final CloseableHttpClient CLIENT = makeNewClient(null);
 //    private static final AbstractHttpClient CLIENT = new DefaultHttpClient();
 //    static {
 //        HttpRoutePlanner routePlanner = new ProxySelectorRoutePlanner(
