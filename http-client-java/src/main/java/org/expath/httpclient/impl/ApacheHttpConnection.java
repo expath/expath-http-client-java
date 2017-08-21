@@ -10,6 +10,10 @@
 package org.expath.httpclient.impl;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
@@ -19,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpVersion;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -28,18 +33,28 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.GzipCompressingEntity;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentProducer;
 import org.apache.http.entity.EntityTemplate;
 import org.apache.http.impl.client.*;
 import org.apache.http.impl.conn.*;
 import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.ssl.SSLContexts;
 import org.expath.httpclient.HeaderSet;
 import org.expath.httpclient.HttpClientException;
 import org.expath.httpclient.HttpConnection;
 import org.expath.httpclient.HttpConstants;
 import org.expath.httpclient.HttpCredentials;
 import org.expath.httpclient.HttpRequestBody;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
 
 /**
  * An implementation of an HTTP connection using Apachhe HTTP Client.
@@ -453,16 +468,58 @@ public class ApacheHttpConnection
         req.setEntity(entity);
     }
 
+    private static PoolingHttpClientConnectionManager setupConnectionPool() {
+        final SSLContext sslContext = SSLContexts.
+                createSystemDefault();
+
+        final SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLSocketFactoryWithSNI(sslContext);
+
+        final Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory>create()
+                .register("https", sslConnectionSocketFactory)
+                .register("http", PlainConnectionSocketFactory.INSTANCE)
+                .build();
+
+        final PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry, null, null, null, 15, TimeUnit.MINUTES);     //TODO(AR) TTL is currently 15 minutes, make configurable?
+        poolingHttpClientConnectionManager.setMaxTotal(40); //TODO(AR) total pooled connections is 40, make configurable?
+        return poolingHttpClientConnectionManager;
+    }
+
+    /**
+     * Implements SNI (Server Name Identification) for SSL
+     *
+     * @see https://github.com/fgeorges/expath-http-client-java/issues/5
+     */
+    private static class SSLSocketFactoryWithSNI extends SSLConnectionSocketFactory {
+        public SSLSocketFactoryWithSNI(final SSLContext sslContext) {
+            super(sslContext);
+        }
+
+        @Override
+        public Socket connectSocket(final int connectTimeout, final Socket socket, final HttpHost host,
+                final InetSocketAddress remoteAddress, final InetSocketAddress localAddress, final HttpContext context)
+                throws IOException {
+            if (socket instanceof SSLSocket) {
+                try {
+                    final Class socketClazz = socket.getClass();
+                    final Method m = socketClazz.getDeclaredMethod("setHost", String.class);
+                    m.setAccessible(true);
+                    m.invoke(socket, host.getHostName());
+                } catch (final NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                    LOG.warn("Problem whilst setting SNI: " + e.getMessage(), e);
+                }
+            }
+
+            return super.connectSocket(connectTimeout, socket, host, remoteAddress, localAddress, context);
+        }
+    }
+
     private enum State {
         INITIAL,
         POST_CONNECT
     }
 
-    private static final PoolingHttpClientConnectionManager POOLING_CONNECTION_MANAGER
-            = new PoolingHttpClientConnectionManager(15, TimeUnit.MINUTES); //TODO(AR) make configurable
-    static {
-        POOLING_CONNECTION_MANAGER.setMaxTotal(40); //TODO(AR) make configurable
-    }
+    private static final PoolingHttpClientConnectionManager POOLING_CONNECTION_MANAGER = setupConnectionPool();
+
     private State state = State.INITIAL;
 
     /** The target URI. */
