@@ -91,7 +91,7 @@ public class RequestParser
         //     timeout? = integer
         for ( Attribute a : myRequest.attributes() ) {
             String local = a.getLocalName();
-            if ( !"".equals(a.getNamespaceUri()) ) {
+            if ( !(a.getNamespaceUri() == null || a.getNamespaceUri().isEmpty()) ) {
                 // ignore namespace qualified attributes
             }
             else if ( "method".equals(local) ) {
@@ -151,7 +151,7 @@ public class RequestParser
         for ( Element child : myRequest.children() ) {
             String local = child.getLocalName();
             String ns = child.getNamespaceUri();
-            if ( "".equals(ns) ) {
+            if ( ns == null || ns.isEmpty() ) {
                 // elements in no namespace are an error
                 throw new HttpClientException("Element in no namespace: " + local);
             }
@@ -203,7 +203,7 @@ public class RequestParser
         String value = null;
         for ( Attribute a : e.attributes() ) {
             String local = a.getLocalName();
-            if ( !"".equals(a.getNamespaceUri()) ) {
+            if ( !(a.getNamespaceUri() == null || a.getNamespaceUri().isEmpty()) ) {
                 // ignore namespace qualified attributes
             }
             else if ( "name".equals(local) ) {
