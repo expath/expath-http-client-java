@@ -1,3 +1,6 @@
+*.iml
+.idea/
+
 /build/expath-http-client-java-*/
 /build/expath-http-client-saxon-*/
 /build/expath-http-client-java-*.zip
