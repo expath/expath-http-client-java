@@ -50,6 +50,7 @@ public class HttpRequestImpl
         if ( myGzip ) {
             conn.setGzip(true);
         }
+        conn.setChunked(isChunked());
 
         conn.setFollowRedirect(myFollowRedirect);
         conn.connect(myBody, cred);
@@ -178,6 +179,24 @@ public class HttpRequestImpl
         myGzip = gzip;
     }
 
+    @Override
+    public boolean isChunked() {
+        if(myChunked == null) {
+            if(myHttpVer.equals(HttpConstants.HTTP_1_0)) {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return myChunked;
+        }
+    }
+
+    @Override
+    public void setChunked(boolean chunked) {
+        this.myChunked = chunked;
+    }
+
     private String myMethod;
     private String myHref;
     private String myHttpVer;
@@ -186,6 +205,7 @@ public class HttpRequestImpl
     private boolean myFollowRedirect = true;
     private Integer myTimeout = null;
     private boolean myGzip = false;
+    private Boolean myChunked = null;
     private HeaderSet myHeaders;
     private HttpRequestBody myBody;
     private static final Log LOG = LogFactory.getLog(HttpRequestImpl.class);

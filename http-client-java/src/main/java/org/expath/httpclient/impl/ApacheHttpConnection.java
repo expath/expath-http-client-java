@@ -249,6 +249,11 @@ public class ApacheHttpConnection
         myGzip = gzip;
     }
 
+    @Override
+    public void setChunked(final boolean chunked) {
+        myChunked = chunked;
+    }
+
     /**
      * Check the method name does match the HTTP/1.1 production rules.
      *
@@ -423,12 +428,30 @@ public class ApacheHttpConnection
         // make the entity from a new producer
         final HttpEntity entity;
         if ( myVersion == HttpVersion.HTTP_1_1 ) {
-            // Take advantage of HTTP 1.1 chunked encoding to stream the
-            // payload directly to the request.
-            ContentProducer producer = new RequestBodyProducer(body);
-            EntityTemplate template = new EntityTemplate(producer);
-            template.setContentType(body.getContentType());
-            template.setChunked(true);
+
+            final HttpEntity template;
+            if(myChunked) {
+                // Take advantage of HTTP 1.1 chunked encoding to stream the
+                // payload directly to the request.
+                final ContentProducer producer = new RequestBodyProducer(body);
+                final EntityTemplate entityTemplate = new EntityTemplate(producer);
+                entityTemplate.setContentType(body.getContentType());
+                entityTemplate.setChunked(true);
+                template = entityTemplate;
+
+            } else {
+                /*
+                    NOTE: for some reason even if you set EntityTemplate#setChunked(false),
+                    Apache insists on chunking anyway... So, instead we manually buffer here
+                    to foce non-chunked transfer encoding.
+                 */
+                try (final ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
+                    body.serialize(buffer);
+                    template = new ByteArrayEntity(buffer.toByteArray());
+                } catch (final IOException e) {
+                    throw new HttpClientException(e.getMessage(), e);
+                }
+            }
 
             if(myGzip) {
                 entity = new GzipCompressingEntity(template);
@@ -538,6 +561,7 @@ public class ApacheHttpConnection
     private Integer myTimeout = null;
     /** whether we should use gzip transfer encoding */
     private boolean myGzip = false;
+    private boolean myChunked = true;
 
     /**
      * The shared cookie store.

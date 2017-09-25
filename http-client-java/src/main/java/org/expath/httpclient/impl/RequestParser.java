@@ -89,6 +89,8 @@ public class RequestParser
         //     override-media-type? = string
         //     follow-redirect? = boolean
         //     timeout? = integer
+        //     gzip? = boolean
+        //     chunked? = boolean
         for ( Attribute a : myRequest.attributes() ) {
             String local = a.getLocalName();
             if ( !(a.getNamespaceUri() == null || a.getNamespaceUri().isEmpty()) ) {
@@ -130,6 +132,9 @@ public class RequestParser
             else if ( "gzip".equals(local) ) {
                 req.setGzip(toBoolean(a));
             }
+            else if ( "chunked".equals(local) ) {
+                req.setChunked(toBoolean(a));
+            }
             else {
                 throw new HttpClientException("Unknown attribute http:request/@" + local);
             }
@@ -142,6 +147,9 @@ public class RequestParser
         }
         if ( username != null || password != null || auth_method != null ) {
             setAuthentication(username, password, auth_method);
+        }
+        if(req.getHttpVersion() != null && req.getHttpVersion().equals(HttpConstants.HTTP_1_0) && req.isChunked()) {
+            throw new HttpClientException("Chunked transfer encoding can only be used with HTTP 1.1");
         }
 
         // walk the elements

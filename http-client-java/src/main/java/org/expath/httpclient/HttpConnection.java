@@ -35,6 +35,7 @@ public interface HttpConnection
     public void setFollowRedirect(boolean follow);
     public void setTimeout(int seconds);
     public void setGzip(boolean gzip);
+    public void setChunked(boolean chunked);
     // responses...
     public int getResponseStatus()
             throws HttpClientException;

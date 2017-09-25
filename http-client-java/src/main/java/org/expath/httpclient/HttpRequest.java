@@ -35,6 +35,8 @@ public interface HttpRequest
     public void setFollowRedirect(boolean follow);
     public void setTimeout(Integer seconds);
     public void setGzip(boolean gzip);
+    public boolean isChunked();
+    public void setChunked(boolean chunked);
 }
 
 
