@@ -182,7 +182,7 @@ public class HttpRequestImpl
     @Override
     public boolean isChunked() {
         if(myChunked == null) {
-            if(myHttpVer.equals(HttpConstants.HTTP_1_0)) {
+            if(myHttpVer != null && myHttpVer.equals(HttpConstants.HTTP_1_0)) {
                 return false;
             } else {
                 return true;
