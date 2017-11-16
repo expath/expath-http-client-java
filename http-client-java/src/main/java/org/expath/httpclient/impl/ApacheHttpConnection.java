@@ -412,6 +412,12 @@ public class ApacheHttpConnection
         final Credentials c = new UsernamePasswordCredentials(user, pwd);
         final AuthScope scope = new AuthScope(host, port);
 
+        if(clientContext.getCredentialsProvider() == null) {
+            clientContext.setCredentialsProvider(new BasicCredentialsProvider());
+        } else {
+            clientContext.getCredentialsProvider().clear();
+        }
+
         clientContext.getCredentialsProvider().setCredentials(scope, c);
         return clientContext;
     }
