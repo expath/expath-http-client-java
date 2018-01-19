@@ -510,6 +510,7 @@ public class ApacheHttpConnection
 
         final PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry, null, null, null, 15, TimeUnit.MINUTES);     //TODO(AR) TTL is currently 15 minutes, make configurable?
         poolingHttpClientConnectionManager.setMaxTotal(40); //TODO(AR) total pooled connections is 40, make configurable?
+        poolingHttpClientConnectionManager.setDefaultMaxPerRoute(2);    //TODO(AR) max default connections per route is 2, make configurable?
         return poolingHttpClientConnectionManager;
     }
 
