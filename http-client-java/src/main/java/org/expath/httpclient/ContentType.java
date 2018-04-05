@@ -13,70 +13,101 @@ import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.NameValuePair;
 
+import javax.annotation.Nullable;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 /**
  * Represent a Content-Type header.
- *
+ * <p>
  * Provide the ability to get the boundary param in case of a multipart
  * content type on the one hand, and the ability to get only the MIME type
  * string without any param on the other hand.
  *
  * @author Florent Georges
  */
-public class ContentType
-{
-    public ContentType(String type, String boundary)
-    {
+public class ContentType {
+
+    public static final Charset DEFAULT_HTTP_CHARSET = StandardCharsets.ISO_8859_1;
+
+    public ContentType(final String type, final String charset, final String boundary) {
         myHeader = null;
         myType = type;
+        myCharset = charset;
         myBoundary = boundary;
     }
 
-    public ContentType(Header h)
-            throws HttpClientException
-    {
-        if ( h == null ) {
+    public ContentType(final Header h) throws HttpClientException {
+        if (h == null) {
             throw new HttpClientException("Header is null");
         }
-        if ( ! "Content-Type".equalsIgnoreCase(h.getName()) ) {
+        if (!"Content-Type".equalsIgnoreCase(h.getName())) {
             throw new HttpClientException("Header is not content type");
         }
-        myHeader = h;
-        myType = HeaderSet.getHeaderWithoutParam(myHeader);
-        HeaderElement[] elems = h.getElements();
-        if ( elems != null ) {
-            for ( HeaderElement e : elems ) {
-                for ( NameValuePair p : e.getParameters() ) {
-                    if ( "boundary".equals(p.getName()) ) {
-                        myBoundary = p.getValue();
-                    }
+
+        this.myHeader = h;
+
+        final HeaderElement[] elems = myHeader.getElements();
+        if (elems == null || elems.length == 0) {
+            this.myType = null;
+        } else if (elems.length > 1) {
+            throw new HttpClientException("Multiple Content-Type headers");
+        } else {
+            this.myType = elems[0].getName();
+        }
+
+        String charset = null;
+        String boundary = null;
+        if (elems != null) {
+            for (final HeaderElement e : elems) {
+                final NameValuePair nvpCharset = e.getParameterByName("charset");
+                if (nvpCharset != null) {
+                    charset = nvpCharset.getValue();
+                }
+                final NameValuePair nvpBoundary = e.getParameterByName("boundary");
+                if (nvpBoundary != null) {
+                    boundary = nvpBoundary.getValue();
                 }
             }
         }
+        this.myCharset = charset;
+        this.myBoundary = boundary;
     }
 
     @Override
-    public String toString()
-    {
-        if ( myHeader == null ) {
-            return "Content-Type: " + getValue();
-        }
-        else {
+    public String toString() {
+        if (myHeader == null) {
+            final StringBuilder builder = new StringBuilder("Content-Type: ").append(getValue());
+            if (myCharset != null) {
+                builder.append("; charset=").append(myCharset);
+            }
+            if (myBoundary != null) {
+                builder.append("; boundary=").append(myBoundary);
+            }
+
+            return builder.toString();
+        } else {
             return myHeader.toString();
         }
     }
 
-    public String getType()
-    {
+    @Nullable
+    public String getType() {
         return myType;
     }
 
-    public String getBoundary()
-    {
+    @Nullable
+    public String getCharset() {
+        return myCharset;
+    }
+
+    @Nullable
+    public String getBoundary() {
         return myBoundary;
     }
 
-    public String getValue()
-    {
+    @Nullable
+    public String getValue() {
         // TODO: Why did I add the boundary before...?
 //        if ( myHeader == null ) {
 //            StringBuilder b = new StringBuilder();
@@ -89,20 +120,20 @@ public class ContentType
 //            }
 //            return b.toString();
 //        }
-        if ( myType != null ) {
+        if (myType != null) {
             return myType;
         }
-        if ( myHeader != null ) {
+        if (myHeader != null) {
             return myHeader.getValue();
-        }
-        else {
+        } else {
             return null;
         }
     }
 
-    private Header myHeader;
-    private String myType;
-    private String myBoundary;
+    private final Header myHeader;
+    private final String myType;
+    private final String myCharset;
+    private final String myBoundary;
 }
 
 

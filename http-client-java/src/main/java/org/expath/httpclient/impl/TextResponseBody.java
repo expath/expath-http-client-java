@@ -11,7 +11,12 @@ package org.expath.httpclient.impl;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 import org.expath.httpclient.ContentType;
 import org.expath.httpclient.HeaderSet;
@@ -21,38 +26,49 @@ import org.expath.httpclient.model.Result;
 import org.expath.httpclient.model.TreeBuilder;
 import org.expath.tools.ToolsException;
 
+import static org.expath.httpclient.ContentType.DEFAULT_HTTP_CHARSET;
+
 /**
  * A text body in the response.
  *
  * @author Florent Georges
  */
-public class TextResponseBody
-        implements HttpResponseBody
-{
-    public TextResponseBody(Result result, InputStream in, ContentType type, HeaderSet headers)
-            throws HttpClientException
-    {
+public class TextResponseBody implements HttpResponseBody {
+
+    public TextResponseBody(final Result result, final InputStream in, final ContentType type, final HeaderSet headers)
+            throws HttpClientException {
         myContentType = type;
         myHeaders = headers;
-        // TODO: ...
-        final Charset charset = StandardCharsets.UTF_8;
-        final Reader reader = new InputStreamReader(in, charset);
-        result.add(reader);
+
+        final Charset contentCharset;
+        if (type.getCharset() != null) {
+            contentCharset = Charset.forName(type.getCharset());
+        } else {
+            contentCharset = DEFAULT_HTTP_CHARSET;
+        }
+
+        final Reader reader = new InputStreamReader(in, contentCharset);
+        result.add(reader, contentCharset);
     }
 
-    public TextResponseBody(Result result, Reader in, ContentType type, HeaderSet headers)
-            throws HttpClientException
-    {
+    public TextResponseBody(final Result result, final Reader in, final ContentType type, final HeaderSet headers)
+            throws HttpClientException {
         myContentType = type;
         myHeaders = headers;
-        result.add(in);
+
+        final Charset contentCharset;
+        if (type.getCharset() != null) {
+            contentCharset = Charset.forName(type.getCharset());
+        } else {
+            contentCharset = DEFAULT_HTTP_CHARSET;
+        }
+
+        result.add(in, contentCharset);
     }
 
     @Override
-    public void outputBody(TreeBuilder b)
-            throws HttpClientException
-    {
-        if ( myHeaders != null ) {
+    public void outputBody(final TreeBuilder b) throws HttpClientException {
+        if (myHeaders != null) {
             b.outputHeaders(myHeaders);
         }
         try {
@@ -61,14 +77,13 @@ public class TextResponseBody
             // TODO: Support other attributes as well?
             b.startContent();
             b.endElem();
-        }
-        catch ( ToolsException ex ) {
+        } catch (ToolsException ex) {
             throw new HttpClientException("Error building the body", ex);
         }
     }
 
-    private ContentType myContentType;
-    private HeaderSet myHeaders;
+    private final ContentType myContentType;
+    private final HeaderSet myHeaders;
 }
 
 

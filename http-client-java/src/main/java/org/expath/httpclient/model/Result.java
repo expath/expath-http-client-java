@@ -11,7 +11,9 @@ package org.expath.httpclient.model;
 
 import java.io.Reader;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import javax.xml.transform.Source;
+
 import org.expath.httpclient.HttpClientException;
 import org.expath.httpclient.HttpResponse;
 
@@ -70,7 +72,7 @@ public interface Result
      * @param string The string to add to the result sequence.
      * @throws HttpClientException If any error occurs.
      */
-    public void add(Reader string)
+    public void add(Reader string, Charset encoding)
             throws HttpClientException;
 
     /**

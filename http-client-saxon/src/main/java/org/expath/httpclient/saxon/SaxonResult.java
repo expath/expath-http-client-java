@@ -10,6 +10,7 @@
 package org.expath.httpclient.saxon;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import javax.xml.transform.Source;
@@ -51,7 +52,7 @@ public class SaxonResult
     }
 
     @Override
-    public void add(Reader reader)
+    public void add(Reader reader, Charset charset)
             throws HttpClientException
     {
         try(final BufferedReader buf_in = new BufferedReader(reader)) {

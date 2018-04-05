@@ -12,9 +12,10 @@ package org.expath.httpclient.impl;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
 import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.message.BasicHeader;
 import org.expath.httpclient.ContentType;
 import org.expath.httpclient.HeaderSet;
 import org.expath.httpclient.HttpClientException;
@@ -31,19 +32,17 @@ import org.expath.tools.model.Sequence;
  *
  * @author Florent Georges
  */
-public class BodyFactory
-{
+public class BodyFactory {
     // TODO: Take new methods into account (XHTML, BASE64 and HEX).
-    public static HttpRequestBody makeRequestBody(Element elem, Sequence bodies, String ns)
-            throws HttpClientException
-    {
+    public static HttpRequestBody makeRequestBody(final Element elem, final Sequence bodies, final String ns)
+            throws HttpClientException {
         // method is got from @method if any...
         Type method = parseMethod(elem);
         // ...or from @media-type if no @method
-        if ( method == null ) {
+        if (method == null) {
             method = parseType(elem);
         }
-        switch ( method ) {
+        switch (method) {
             case MULTIPART:
                 return new MultipartRequestBody(elem, bodies, ns);
             case SRC:
@@ -61,36 +60,33 @@ public class BodyFactory
         }
     }
 
-    public static HttpResponseBody makeResponseBody(Result result, ContentType type, HttpConnection conn)
-            throws HttpClientException
-    {
-        if ( type == null ) {
+    public static HttpResponseBody makeResponseBody(final Result result, final ContentType type, final HttpConnection conn)
+            throws HttpClientException {
+        if (type == null) {
             // it is legitimate to not have a body in a response; for instance
             // on a "304 Not Modified"
             return null;
         }
         String t = type.getType();
-        if ( t == null ) {
+        if (t == null) {
             return null;
         }
-        InputStream in = conn.getResponseStream();
-        if ( in == null ) {
+        final InputStream in = conn.getResponseStream();
+        if (in == null) {
             return null;
         }
-        if ( t.startsWith("multipart/") ) {
-            return new MultipartResponseBody(result, in, type, conn);
-        }
-        else {
+        if (t.startsWith("multipart/")) {
+            return new MultipartResponseBody(result, in, type);
+        } else {
             return makeResponsePart(result, null, in, type);
         }
     }
 
     // package-level to be used within MultipartResponseBody ctor
     // TODO: Take new methods into account (XHTML, BASE64 and HEX).
-    static HttpResponseBody makeResponsePart(Result result, HeaderSet headers, InputStream in, ContentType ctype)
-            throws HttpClientException
-    {
-        switch ( parseType(ctype) ) {
+    static HttpResponseBody makeResponsePart(final Result result, final HeaderSet headers, final InputStream in, final ContentType ctype)
+            throws HttpClientException {
+        switch (parseType(ctype)) {
             case XML:
                 // TODO: 'content_type' is the header Content-Type without any param
                 // (i.e. "text/xml".)  Should we keep this, or put the whole header
@@ -107,8 +103,7 @@ public class BodyFactory
         }
     }
 
-    public static enum Type
-    {
+    public enum Type {
         XML,
         HTML,
         XHTML,
@@ -120,20 +115,22 @@ public class BodyFactory
         SRC
     }
 
-    /** Media types that must be treated as text types (in addition to text/*). */
-    private static Set<String> TEXT_TYPES;
+    /**
+     * Media types that must be treated as text types (in addition to text/*).
+     */
+    private static final Set<String> TEXT_TYPES = new HashSet<>();
     static {
-        TEXT_TYPES = new HashSet<String>();
         TEXT_TYPES.add("application/x-www-form-urlencoded");
         TEXT_TYPES.add("application/xml-dtd");
     }
 
-    /** Media types that must be treated as XML types (in addition to *+xml). */
-    private static Set<String> XML_TYPES;
+    /**
+     * Media types that must be treated as XML types (in addition to *+xml).
+     */
+    private static final Set<String> XML_TYPES = new HashSet<>();
     static {
         // Doc: does not handle "application/xml-dtd" as XML
         // TODO: What about ".../xml-external-parsed-entity" ?
-        XML_TYPES = new HashSet<String>();
         XML_TYPES.add("text/xml");
         XML_TYPES.add("application/xml");
         XML_TYPES.add("text/xml-external-parsed-entity");
@@ -142,24 +139,19 @@ public class BodyFactory
 
     /**
      * Decode the content type from a MIME type string.
-     *
+     * <p>
      * TODO: Take new methods into account (XHTML, BASE64 and HEX).
      */
-    private static Type parseType(String type)
-    {
-        if ( type.startsWith("multipart/") ) {
+    private static Type parseType(final String type) {
+        if (type.startsWith("multipart/")) {
             return Type.MULTIPART;
-        }
-        else if ( "text/html".equals(type) ) {
+        } else if ("text/html".equals(type)) {
             return Type.HTML;
-        }
-        else if ( type.endsWith("+xml") || XML_TYPES.contains(type) ) {
+        } else if (type.endsWith("+xml") || XML_TYPES.contains(type)) {
             return Type.XML;
-        }
-        else if ( type.startsWith("text/") || TEXT_TYPES.contains(type) ) {
+        } else if (type.startsWith("text/") || TEXT_TYPES.contains(type)) {
             return Type.TEXT;
-        }
-        else {
+        } else {
             return Type.BINARY;
         }
     }
@@ -167,28 +159,24 @@ public class BodyFactory
     /**
      * Look for the header COntent-Type in a header set and decode it.
      */
-    public static Type parseType(HeaderSet headers)
-            throws HttpClientException
-    {
-        Header h = headers.getFirstHeader("Content-Type");
-        if ( h == null ) {
+    public static Type parseType(final HeaderSet headers) throws HttpClientException {
+        final Header h = headers.getFirstHeader("Content-Type");
+        if (h == null) {
             throw new HttpClientException("impossible to find the content type");
         }
-        ContentType ct = new ContentType(h);
+        final ContentType ct = new ContentType(h);
         return parseType(ct);
     }
 
     /**
      * Decode the content type from a ContentType object.
      */
-    public static Type parseType(ContentType type)
-            throws HttpClientException
-    {
-        if ( type == null ) {
+    public static Type parseType(final ContentType type) throws HttpClientException {
+        if (type == null) {
             throw new HttpClientException("impossible to find the content type");
         }
-        String t = type.getType();
-        if ( t == null ) {
+        final String t = type.getType();
+        if (t == null) {
             throw new HttpClientException("impossible to find the content type");
         }
         return parseType(t);
@@ -197,74 +185,67 @@ public class BodyFactory
     /**
      * Parse the @media-type from a http:body or http:multipart element.
      */
-    private static Type parseType(Element elem)
-            throws HttpClientException
-    {
-        String local = elem.getLocalName();
-        if ( "multipart".equals(local) ) {
+    private static Type parseType(final Element elem) throws HttpClientException {
+        final String local = elem.getLocalName();
+        if ("multipart".equals(local)) {
             return Type.MULTIPART;
-        }
-        else if ( ! "body".equals(local) ) {
+        } else if (!"body".equals(local)) {
             throw new HttpClientException("INTERNAL ERROR: cannot happen, checked before");
-        }
-        else {
-            if ( elem.getAttribute("src") != null ) {
+        } else {
+            if (elem.getAttribute("src") != null) {
                 return Type.SRC;
             }
-            String content_type = elem.getAttribute("media-type");
-            if ( content_type == null ) {
+            final String mediaType = elem.getAttribute("media-type");
+            if (mediaType == null) {
                 throw new HttpClientException("@media-type is not set on http:body");
             }
-            Type type = parseType(HeaderSet.getValueWithoutParam(content_type));
-            if ( type == Type.MULTIPART ) {
-                String msg = "multipart type not allowed for http:body: " + content_type;
-                throw new HttpClientException(msg);
+            final Header mediaTypeHeader = new BasicHeader("Media-Type", mediaType);
+            final HeaderElement[] mediaTypeHeaderElems = mediaTypeHeader.getElements();
+            if (mediaTypeHeaderElems == null || mediaTypeHeaderElems.length == 0) {
+                throw new HttpClientException("@media-type is not set on http:body");
+            } else if (mediaTypeHeaderElems.length > 1) {
+                throw new HttpClientException("Multiple @media-type internet media types present");
+            } else {
+                final Type type = parseType(mediaTypeHeaderElems[0].getName());
+                if (type == Type.MULTIPART) {
+                    final String msg = "multipart type not allowed for http:body: " + mediaType;
+                    throw new HttpClientException(msg);
+                }
+                return type;
             }
-            return type;
         }
     }
 
     /**
      * Parse the @method from a http:body or http:multipart element.
-     *
+     * <p>
      * Return null if there is no @method.
      */
-    private static Type parseMethod(Element elem)
-            throws HttpClientException
-    {
-        String m = elem.getAttribute("method");
-        if ( m == null ) {
+    private static Type parseMethod(final Element elem) throws HttpClientException {
+        final String m = elem.getAttribute("method");
+        if (m == null) {
             return null;
-        }
-        else if ( "xml".equals(m) ) {
+        } else if ("xml".equals(m)) {
             return Type.XML;
-        }
-        else if ( "html".equals(m) ) {
+        } else if ("html".equals(m)) {
             return Type.HTML;
-        }
-        else if ( "xhtml".equals(m) ) {
+        } else if ("xhtml".equals(m)) {
             return Type.XHTML;
-        }
-        else if ( "text".equals(m) ) {
+        } else if ("text".equals(m)) {
             return Type.TEXT;
-        }
-        else if ( "binary".equals(m) ) {
+        } else if ("binary".equals(m)) {
             return Type.BINARY;
         }
         // FIXME: The spec says "binary", but I think we need "base64" and "hex"
         // instead (or in addition, if "binary" is left implementation-defined).
-        else if ( "base64".equals(m) ) {
+        else if ("base64".equals(m)) {
             return Type.BASE64;
-        }
-        else if ( "hex".equals(m) ) {
+        } else if ("hex".equals(m)) {
             return Type.HEX;
-        }
-        else {
+        } else {
             throw new HttpClientException("Incorrect value for @method: " + m);
         }
     }
-
-    private static Log LOG = LogFactory.getLog(BodyFactory.class);
 }
 
 

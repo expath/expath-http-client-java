@@ -101,39 +101,6 @@ public class HeaderSet
         return null;
     }
 
-    public String getFirstHeaderWithoutParam(String name)
-            throws HttpClientException
-    {
-        Header h = getFirstHeader(name);
-        return getHeaderWithoutParam(h);
-    }
-
-    public static String getValueWithoutParam(String header_value)
-            throws HttpClientException
-    {
-        Header h = new BasicHeader("X-Dummy", header_value);
-        return getHeaderWithoutParam(h);
-    }
-
-    public static String getHeaderWithoutParam(Header header)
-            throws HttpClientException
-    {
-        // get the content type, only the mime string, like "type/subtype"
-        if ( header != null ) {
-            HeaderElement[] elems = header.getElements();
-            if ( elems == null ) {
-                return null;
-            }
-            else if ( elems.length == 1 ) {
-                return elems[0].getName();
-            }
-            else {
-                throw new HttpClientException("Multiple Content-Type headers");
-            }
-        }
-        return null;
-    }
-
     private List<Header> myHeaders;
 }
 

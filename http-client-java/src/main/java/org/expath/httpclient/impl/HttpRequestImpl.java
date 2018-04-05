@@ -87,7 +87,7 @@ public class HttpRequestImpl
             }
         }
         else {
-            return new ContentType(myOverrideType, null);
+            return new ContentType(myOverrideType, null, null);
         }
     }
 
