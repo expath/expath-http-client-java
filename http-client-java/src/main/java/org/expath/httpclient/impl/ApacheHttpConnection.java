@@ -25,9 +25,11 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpVersion;
+import org.apache.http.auth.AuthScheme;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.AuthCache;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.GzipCompressingEntity;
@@ -41,6 +43,8 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentProducer;
 import org.apache.http.entity.EntityTemplate;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.auth.DigestScheme;
 import org.apache.http.impl.client.*;
 import org.apache.http.impl.conn.*;
 import org.apache.http.protocol.HTTP;
@@ -254,6 +258,11 @@ public class ApacheHttpConnection
         myChunked = chunked;
     }
 
+    @Override
+    public void setPreemptiveAuthentication(final boolean preemptiveAuthentication) {
+        myPreemptiveAuthentication = preemptiveAuthentication;
+    }
+
     /**
      * Check the method name does match the HTTP/1.1 production rules.
      *
@@ -379,46 +388,70 @@ public class ApacheHttpConnection
      * Set the credentials on the client, based on the {@link HttpCredentials} object.
      */
     private HttpClientContext setCredentials(HttpCredentials cred)
-            throws HttpClientException
-    {
+            throws HttpClientException {
         final HttpClientContext clientContext = HttpClientContext.create();
 
-        if ( cred == null ) {
+        if (cred == null) {
             return clientContext;
         }
 
-        URI uri = myRequest.getURI();
+        final URI uri = myRequest.getURI();
+        final String scheme = uri.getScheme();
         int port = uri.getPort();
-        if ( port == -1 ) {
-            String scheme = uri.getScheme();
-            if ( "http".equals(scheme) ) {
+        if (port == -1) {
+            if ("http".equals(scheme)) {
                 port = 80;
-            }
-            else if ( "https".equals(scheme) ) {
+            } else if ("https".equals(scheme)) {
                 port = 443;
-            }
-            else {
+            } else {
                 throw new HttpClientException("Unknown scheme: " + uri);
             }
         }
-        String host = uri.getHost();
-        String user = cred.getUser();
-        String pwd = cred.getPwd();
-        if ( LOG.isDebugEnabled() ) {
-            LOG.debug("Set credentials for " + host + ":" + port
+        final String host = uri.getHost();
+
+        final HttpHost targetHost = new HttpHost(host, port, scheme);
+
+        final String user = cred.getUser();
+        final String pwd = cred.getPwd();
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Set credentials for " + targetHost.getHostName() + ":" + targetHost.getPort()
                     + " - " + user + " - ***");
         }
 
         final Credentials c = new UsernamePasswordCredentials(user, pwd);
-        final AuthScope scope = new AuthScope(host, port);
+        final AuthScope scope = new AuthScope(targetHost);
 
-        if(clientContext.getCredentialsProvider() == null) {
+        if (clientContext.getCredentialsProvider() == null) {
             clientContext.setCredentialsProvider(new BasicCredentialsProvider());
         } else {
             clientContext.getCredentialsProvider().clear();
         }
 
         clientContext.getCredentialsProvider().setCredentials(scope, c);
+
+        // force preemptive authentication?
+        // see - https://hc.apache.org/httpcomponents-client-ga/tutorial/html/authentication.html#d5e717
+        if (myPreemptiveAuthentication) {
+
+            // is there already an auth cache?
+            if (clientContext.getAuthCache() == null) {
+                // no, so create one
+                final AuthCache authCache = new BasicAuthCache();
+                clientContext.setAuthCache(authCache);
+            }
+
+            // set the auth cache scheme
+            final AuthScheme authScheme;
+            if (cred.getMethod().equals("DIGEST")) {
+                authScheme = new DigestScheme();
+            } else {
+                authScheme = new BasicScheme();
+            }
+
+            clientContext.getAuthCache().put(targetHost, authScheme);
+        }
+
         return clientContext;
     }
 
@@ -569,6 +602,7 @@ public class ApacheHttpConnection
     /** whether we should use gzip transfer encoding */
     private boolean myGzip = false;
     private boolean myChunked = true;
+    private boolean myPreemptiveAuthentication = false;
 
     /**
      * The shared cookie store.

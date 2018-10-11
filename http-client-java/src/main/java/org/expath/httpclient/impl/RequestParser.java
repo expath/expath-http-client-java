@@ -62,11 +62,6 @@ public class RequestParser
         return myCredentials;
     }
 
-    public boolean  getSendAuth()
-    {
-        return mySendAuth;
-    }
-
     public HttpRequest parse(Sequence bodies, String href)
             throws HttpClientException
     {
@@ -118,7 +113,7 @@ public class RequestParser
                 auth_method = a.getValue();
             }
             else if ( "send-authorization".equals(local) ) {
-                mySendAuth = toBoolean(a);
+                req.setPreemptiveAuthentication(toBoolean(a));
             }
             else if ( "override-media-type".equals(local) ) {
                 req.setOverrideType(a.getValue());
@@ -285,8 +280,6 @@ public class RequestParser
     private String myOtherNs;
     /** User credentials in case of authentication (from @username, @password and @auth-method). */
     private HttpCredentials myCredentials = null;
-    /** The value of @send-authorization. */
-    private boolean mySendAuth = false;
 }
 
 

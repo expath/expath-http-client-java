@@ -37,6 +37,8 @@ public interface HttpRequest
     public void setGzip(boolean gzip);
     public boolean isChunked();
     public void setChunked(boolean chunked);
+    boolean isPreemptiveAuthentication();
+    void setPreemptiveAuthentication(final boolean preemptiveAuthentication);
 }
 
 

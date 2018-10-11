@@ -51,6 +51,7 @@ public class HttpRequestImpl
             conn.setGzip(true);
         }
         conn.setChunked(isChunked());
+        conn.setPreemptiveAuthentication(isPreemptiveAuthentication());
 
         conn.setFollowRedirect(myFollowRedirect);
         conn.connect(myBody, cred);
@@ -197,6 +198,16 @@ public class HttpRequestImpl
         this.myChunked = chunked;
     }
 
+    @Override
+    public boolean isPreemptiveAuthentication() {
+        return myPreemptiveAuthentication;
+    }
+
+    @Override
+    public void setPreemptiveAuthentication(final boolean preemptiveAuthentication) {
+        this.myPreemptiveAuthentication = preemptiveAuthentication;
+    }
+
     private String myMethod;
     private String myHref;
     private String myHttpVer;
@@ -206,6 +217,7 @@ public class HttpRequestImpl
     private Integer myTimeout = null;
     private boolean myGzip = false;
     private Boolean myChunked = null;
+    private boolean myPreemptiveAuthentication = false;
     private HeaderSet myHeaders;
     private HttpRequestBody myBody;
     private static final Log LOG = LogFactory.getLog(HttpRequestImpl.class);

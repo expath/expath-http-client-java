@@ -118,18 +118,13 @@ public class HttpClient
     {
         HttpConnection conn = new ApacheHttpConnection(uri);
         try {
-            if ( parser.getSendAuth() ) {
+            HttpResponse response = request.send(result, conn, parser.getCredentials());
+            if ( response.getStatus() == 401 ) {
+                conn.disconnect();
+                conn = new ApacheHttpConnection(uri);
+                // create a new result, and throw the old one away
+                result = result.makeNewResult();
                 request.send(result, conn, parser.getCredentials());
-            }
-            else {
-                HttpResponse response = request.send(result, conn, null);
-                if ( response.getStatus() == 401 ) {
-                    conn.disconnect();
-                    conn = new ApacheHttpConnection(uri);
-                    // create a new result, and throw the old one away
-                    result = result.makeNewResult();
-                    request.send(result, conn, parser.getCredentials());
-                }
             }
         }
         finally {

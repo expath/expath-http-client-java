@@ -36,6 +36,7 @@ public interface HttpConnection
     public void setTimeout(int seconds);
     public void setGzip(boolean gzip);
     public void setChunked(boolean chunked);
+    public void setPreemptiveAuthentication(boolean preemptiveAuthentication);
     // responses...
     public int getResponseStatus()
             throws HttpClientException;
