@@ -33,8 +33,22 @@ public class ContentType {
     public ContentType(final String type, final String charset, final String boundary) {
         myHeader = null;
         myType = type;
-        myCharset = charset;
-        myBoundary = boundary;
+
+        if (charset != null) {
+            myCharset = charset;
+        } else if (type.contains("charset=")) {
+            myCharset = type.replaceFirst(".+charset=([^;\\s]+).*", "$1");
+        } else {
+            myCharset = null;
+        }
+
+        if (boundary != null) {
+            myBoundary = boundary;
+        } else if (type.contains("boundary=")) {
+            myBoundary = type.replaceFirst(".+boundary=([^;\\s]+).*", "$1");
+        } else {
+            myBoundary = null;
+        }
     }
 
     public ContentType(final Header h) throws HttpClientException {
