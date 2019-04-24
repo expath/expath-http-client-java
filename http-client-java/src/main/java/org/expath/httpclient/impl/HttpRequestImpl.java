@@ -75,21 +75,11 @@ public class HttpRequestImpl
         return resp;
     }
 
-    private ContentType getContentType(HeaderSet headers)
+    private ContentType getContentType(final HeaderSet headers)
             throws HttpClientException
     {
-        if ( myOverrideType == null ) {
-            Header h = headers.getFirstHeader("Content-Type");
-            if ( h == null ) {
-                return null;
-            }
-            else {
-                return new ContentType(h);
-            }
-        }
-        else {
-            return new ContentType(myOverrideType, null, null);
-        }
+        final Header header = headers.getFirstHeader("Content-Type");
+        return ContentType.parse(header, myOverrideType, myDefaultCharset);
     }
 
     @Override
@@ -135,6 +125,11 @@ public class HttpRequestImpl
         else {
             throw new HttpClientException("Unknown HTTP version: '" + ver + "'");
         }
+    }
+
+    @Override
+    public void setDefaultCharset(final String charset) {
+        myDefaultCharset = charset;
     }
 
     @Override
@@ -211,6 +206,7 @@ public class HttpRequestImpl
     private String myMethod;
     private String myHref;
     private String myHttpVer;
+    private String myDefaultCharset;
     private String myOverrideType;
     private boolean myStatusOnly;
     private boolean myFollowRedirect = true;

@@ -115,6 +115,9 @@ public class RequestParser
             else if ( "send-authorization".equals(local) ) {
                 req.setPreemptiveAuthentication(toBoolean(a));
             }
+            else if ( "default-charset".equals(local) ) {
+                req.setDefaultCharset(a.getValue());
+            }
             else if ( "override-media-type".equals(local) ) {
                 req.setOverrideType(a.getValue());
             }

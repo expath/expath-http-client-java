@@ -27,6 +27,7 @@ public interface HttpRequest
     public String getHttpVersion();
     public void setHttpVersion(String ver)
             throws HttpClientException;
+    public void setDefaultCharset(String charset);
     public void setOverrideType(String type);
     public void setHeaders(HeaderSet headers);
     public void setBody(HttpRequestBody body)

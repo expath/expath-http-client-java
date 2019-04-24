@@ -169,7 +169,7 @@ public class MultipartResponseBody implements HttpResponseBody {
         if (h == null) {
             throw new HttpClientException("impossible to find the content type");
         }
-        final ContentType type = new ContentType(h);
+        final ContentType type = ContentType.parse(h, null, null);
         try {
             switch (BodyFactory.parseType(type)) {
                 case XML: {

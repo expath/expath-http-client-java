@@ -31,77 +31,93 @@ public class ContentType {
     public static final Charset DEFAULT_HTTP_CHARSET = StandardCharsets.ISO_8859_1;
 
     public ContentType(final String type, final String charset, final String boundary) {
-        myHeader = null;
-        myType = type;
-
-        if (charset != null) {
-            myCharset = charset;
-        } else if (type.contains("charset=")) {
-            myCharset = type.replaceFirst(".+charset=([^;\\s]+).*", "$1");
-        } else {
-            myCharset = null;
-        }
-
-        if (boundary != null) {
-            myBoundary = boundary;
-        } else if (type.contains("boundary=")) {
-            myBoundary = type.replaceFirst(".+boundary=([^;\\s]+).*", "$1");
-        } else {
-            myBoundary = null;
-        }
-    }
-
-    public ContentType(final Header h) throws HttpClientException {
-        if (h == null) {
-            throw new HttpClientException("Header is null");
-        }
-        if (!"Content-Type".equalsIgnoreCase(h.getName())) {
-            throw new HttpClientException("Header is not content type");
-        }
-
-        this.myHeader = h;
-
-        final HeaderElement[] elems = myHeader.getElements();
-        if (elems == null || elems.length == 0) {
-            this.myType = null;
-        } else if (elems.length > 1) {
-            throw new HttpClientException("Multiple Content-Type headers");
-        } else {
-            this.myType = elems[0].getName();
-        }
-
-        String charset = null;
-        String boundary = null;
-        if (elems != null) {
-            for (final HeaderElement e : elems) {
-                final NameValuePair nvpCharset = e.getParameterByName("charset");
-                if (nvpCharset != null) {
-                    charset = nvpCharset.getValue();
-                }
-                final NameValuePair nvpBoundary = e.getParameterByName("boundary");
-                if (nvpBoundary != null) {
-                    boundary = nvpBoundary.getValue();
-                }
-            }
-        }
+        this.myType = type;
         this.myCharset = charset;
         this.myBoundary = boundary;
     }
 
-    @Override
-    public String toString() {
-        if (myHeader == null) {
-            final StringBuilder builder = new StringBuilder("Content-Type: ").append(getValue());
-            if (myCharset != null) {
-                builder.append("; charset=").append(myCharset);
-            }
-            if (myBoundary != null) {
-                builder.append("; boundary=").append(myBoundary);
+    public static ContentType parse(@Nullable final Header header, @Nullable final String overrideType, @Nullable final String defaultCharset) throws HttpClientException {
+        final String type;
+        final String charset;
+        final String boundary;
+
+        if (overrideType != null) {
+            // get the internet media type from the override
+            type = extractMediaTypeFromContentType(overrideType);
+
+            // does the override contain a charset?
+            if (overrideType.indexOf("charset=") > -1) {
+                // get the charset from the override
+                charset = overrideType.replaceFirst(".+charset=([^;\\s]+).*", "$1");
+            } else {
+                // get the charset from the header or the default
+                if (header == null || !"Content-Type".equalsIgnoreCase(header.getName())) {
+                    throw new HttpClientException("Header is not content type");
+                }
+                final HeaderElement[] headerElements = header.getElements();
+                if (headerElements.length > 1) {
+                    throw new HttpClientException("Multiple Content-Type headers");
+                }
+
+                final NameValuePair headerCharset = headerElements[0].getParameterByName("charset");
+                if (headerCharset != null) {
+                    charset = headerCharset.getValue();
+                } else {
+                    charset = defaultCharset;
+                }
             }
 
-            return builder.toString();
+            // does the override contain a boundary?
+            if (overrideType.indexOf("boundary=") > -1) {
+                boundary = overrideType.replaceFirst(".+boundary=([^;\\s]+).*", "$1");
+            } else {
+                // get the boundary from the header or null
+                if (header == null || !"Content-Type".equalsIgnoreCase(header.getName())) {
+                    throw new HttpClientException("Header is not content type");
+                }
+                final HeaderElement[] headerElements = header.getElements();
+                if (headerElements.length > 1) {
+                    throw new HttpClientException("Multiple Content-Type headers");
+                }
+
+                final NameValuePair headerBoundary = headerElements[0].getParameterByName("boundary");
+                boundary = headerBoundary == null ? null : headerBoundary.getValue();
+            }
+
         } else {
-            return myHeader.toString();
+            // get the internet media type from the header
+            if (header == null || !"Content-Type".equalsIgnoreCase(header.getName())) {
+                throw new HttpClientException("Header is not content type");
+            }
+            final HeaderElement[] headerElements = header.getElements();
+            if (headerElements.length > 1) {
+                throw new HttpClientException("Multiple Content-Type headers");
+            }
+
+            type = extractMediaTypeFromContentType(header.getValue());
+
+            // get the charset from the header or the default
+            final NameValuePair headerCharset = headerElements[0].getParameterByName("charset");
+            if (headerCharset != null) {
+                charset = headerCharset.getValue();
+            } else {
+                charset = defaultCharset;
+            }
+
+            // get the boundary from the header
+            final NameValuePair headerBoundary = headerElements[0].getParameterByName("boundary");
+            boundary = headerBoundary == null ? null : headerBoundary.getValue();
+        }
+
+        return new ContentType(type, charset, boundary);
+    }
+
+    private static String extractMediaTypeFromContentType(final String contentType) {
+        final int idxParamSeparator = contentType.indexOf(';');
+        if (idxParamSeparator > -1) {
+            return contentType.substring(0, idxParamSeparator);
+        } else {
+            return contentType;
         }
     }
 
@@ -122,29 +138,22 @@ public class ContentType {
 
     @Nullable
     public String getValue() {
-        // TODO: Why did I add the boundary before...?
-//        if ( myHeader == null ) {
-//            StringBuilder b = new StringBuilder();
-//            b.append(myType);
-//            if ( myBoundary != null ) {
-//                b.append("; boundary=\"");
-//                // TODO: Is that correct escaping sequence?
-//                b.append(myBoundary.replace("\"", "\\\""));
-//                b.append("\"");
-//            }
-//            return b.toString();
-//        }
-        if (myType != null) {
-            return myType;
+        final StringBuilder builder = new StringBuilder(myType);
+        if (myCharset != null) {
+            builder.append("; charset=").append(myCharset);
         }
-        if (myHeader != null) {
-            return myHeader.getValue();
-        } else {
-            return null;
+        if (myBoundary != null) {
+            builder.append("; boundary=").append(myCharset);
         }
+
+        return builder.toString();
     }
 
-    private final Header myHeader;
+    @Override
+    public String toString() {
+        return getValue();
+    }
+
     private final String myType;
     private final String myCharset;
     private final String myBoundary;
