@@ -11,12 +11,7 @@ package org.expath.httpclient.impl;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
-import java.nio.charset.UnsupportedCharsetException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 
 import org.expath.httpclient.ContentType;
 import org.expath.httpclient.HeaderSet;
@@ -26,14 +21,14 @@ import org.expath.httpclient.model.Result;
 import org.expath.httpclient.model.TreeBuilder;
 import org.expath.tools.ToolsException;
 
-import static org.expath.httpclient.ContentType.DEFAULT_HTTP_CHARSET;
-
 /**
  * A text body in the response.
  *
  * @author Florent Georges
  */
 public class TextResponseBody implements HttpResponseBody {
+
+    public static final Charset DEFAULT_HTTP_TEXT_CHARSET = StandardCharsets.ISO_8859_1;
 
     public TextResponseBody(final Result result, final InputStream in, final ContentType type, final HeaderSet headers)
             throws HttpClientException {
@@ -44,7 +39,7 @@ public class TextResponseBody implements HttpResponseBody {
         if (type.getCharset() != null) {
             contentCharset = Charset.forName(type.getCharset());
         } else {
-            contentCharset = DEFAULT_HTTP_CHARSET;
+            contentCharset = DEFAULT_HTTP_TEXT_CHARSET;
         }
 
         final Reader reader = new InputStreamReader(in, contentCharset);
@@ -60,7 +55,7 @@ public class TextResponseBody implements HttpResponseBody {
         if (type.getCharset() != null) {
             contentCharset = Charset.forName(type.getCharset());
         } else {
-            contentCharset = DEFAULT_HTTP_CHARSET;
+            contentCharset = DEFAULT_HTTP_TEXT_CHARSET;
         }
 
         result.add(in, contentCharset);

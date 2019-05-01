@@ -14,8 +14,6 @@ import org.apache.http.HeaderElement;
 import org.apache.http.NameValuePair;
 
 import javax.annotation.Nullable;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 /**
  * Represent a Content-Type header.
@@ -27,8 +25,6 @@ import java.nio.charset.StandardCharsets;
  * @author Florent Georges
  */
 public class ContentType {
-
-    public static final Charset DEFAULT_HTTP_CHARSET = StandardCharsets.ISO_8859_1;
 
     public ContentType(final String type, final String charset, final String boundary) {
         this.myType = type;

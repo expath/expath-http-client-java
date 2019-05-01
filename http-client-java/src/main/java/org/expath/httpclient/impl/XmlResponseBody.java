@@ -12,7 +12,6 @@ package org.expath.httpclient.impl;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import javax.xml.transform.Source;
@@ -30,14 +29,15 @@ import org.expath.tools.ToolsException;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import static org.expath.httpclient.ContentType.DEFAULT_HTTP_CHARSET;
-
 /**
  * An XML body in the response.
  *
  * @author Florent Georges
  */
 public class XmlResponseBody implements HttpResponseBody {
+
+    public static final Charset DEFAULT_HTTP_APPLICATION_XML_CHARSET = StandardCharsets.UTF_8;
+
     public XmlResponseBody(final Result result, final InputStream in, final ContentType type, final HeaderSet headers, final boolean html)
             throws HttpClientException {
 
@@ -45,7 +45,7 @@ public class XmlResponseBody implements HttpResponseBody {
         if (type.getCharset() != null) {
             contentCharset = Charset.forName(type.getCharset());
         } else {
-            contentCharset = DEFAULT_HTTP_CHARSET;
+            contentCharset = DEFAULT_HTTP_APPLICATION_XML_CHARSET;
         }
 
         final Reader reader = new InputStreamReader(in, contentCharset);
