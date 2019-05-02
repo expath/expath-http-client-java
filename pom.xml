@@ -18,9 +18,9 @@
     <description>EXPath HTTP Client module.</description>
 
     <scm>
-        <connection>scm:git:git://github.com/expath/expath-http-client-java.git</connection>
-        <developerConnection>scm:git:git://github.com/expath/expath-http-client-java.git</developerConnection>
-        <url>http://github.com/expath/expath-http-client-java</url>
+        <connection>scm:git:https://github.com/expath/expath-http-client-java.git</connection>
+        <developerConnection>scm:git:https://github.com/expath/expath-http-client-java.git</developerConnection>
+        <url>scm:git:https://github.com/expath/expath-http-client-java.git</url>
     </scm>
 
     <modules>
