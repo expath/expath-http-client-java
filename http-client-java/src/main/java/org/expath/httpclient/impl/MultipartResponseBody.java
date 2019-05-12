@@ -16,8 +16,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.http.Header;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.stream.EntityState;
@@ -199,7 +199,7 @@ public class MultipartResponseBody implements HttpResponseBody {
     private List<HttpResponseBody> myParts;
     private ContentType myContentType;
     private String myBoundary;
-    private static final Log LOG = LogFactory.getLog(MultipartResponseBody.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MultipartResponseBody.class);
 }
 
 

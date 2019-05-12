@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
 import net.jcip.annotations.NotThreadSafe;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -201,7 +201,7 @@ public class ApacheHttpConnection
     public void setRequestMethod(String method, boolean with_content)
             throws HttpClientException
     {
-        if ( LOG.isInfoEnabled() ) {
+        if ( LOG.isDebugEnabled() ) {
             LOG.debug("Request method: " + method + " (" + with_content + ")");
         }
         String uri = myUri.toString();
@@ -611,7 +611,7 @@ public class ApacheHttpConnection
      */
     private static final CookieStore COOKIES = new BasicCookieStore();
     /** The logger. */
-    private static final Log LOG = LogFactory.getLog(ApacheHttpConnection.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ApacheHttpConnection.class);
 
     /**
      * The HTTP version (1.0 or 1.1) to use by default.

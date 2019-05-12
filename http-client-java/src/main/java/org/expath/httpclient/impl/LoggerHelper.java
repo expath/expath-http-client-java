@@ -9,7 +9,7 @@
 
 package org.expath.httpclient.impl;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.NameValuePair;
@@ -22,7 +22,7 @@ import org.apache.http.cookie.Cookie;
  */
 public class LoggerHelper
 {
-    public static void logCookies(Log log, String prompt, Iterable<Cookie> cookies)
+    public static void logCookies(Logger log, String prompt, Iterable<Cookie> cookies)
     {
         if ( log.isDebugEnabled() ) {
             if ( cookies == null ) {
@@ -35,7 +35,7 @@ public class LoggerHelper
         }
     }
 
-    public static void logHeaders(Log log, String prompt, Header[] headers)
+    public static void logHeaders(Logger log, String prompt, Header[] headers)
     {
         if ( log.isDebugEnabled() ) {
             if ( headers == null ) {
@@ -48,7 +48,7 @@ public class LoggerHelper
         }
     }
 
-    public static void logHeaderDetails(Log log, String prompt, Iterable<Header> headers)
+    public static void logHeaderDetails(Logger log, String prompt, Iterable<Header> headers)
     {
         if ( log.isDebugEnabled() ) {
             if ( headers == null ) {

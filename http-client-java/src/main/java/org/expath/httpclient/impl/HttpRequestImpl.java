@@ -9,8 +9,8 @@
 
 package org.expath.httpclient.impl;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.http.Header;
 import org.expath.httpclient.ContentType;
 import org.expath.httpclient.HeaderSet;
@@ -216,7 +216,7 @@ public class HttpRequestImpl
     private boolean myPreemptiveAuthentication = false;
     private HeaderSet myHeaders;
     private HttpRequestBody myBody;
-    private static final Log LOG = LogFactory.getLog(HttpRequestImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(HttpRequestImpl.class);
 }
 
 

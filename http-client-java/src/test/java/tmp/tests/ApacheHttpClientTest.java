@@ -414,7 +414,7 @@ public class ApacheHttpClientTest
     }
 
     static {
-        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
+//        System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.SimpleLog");
 //        System.setProperty("org.apache.commons.logging.simplelog.showdatetime", "true");
 //        System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http", "debug");
 //        System.setProperty("org.apache.commons.logging.simplelog.log.org.apache.http.wire", "debug");
