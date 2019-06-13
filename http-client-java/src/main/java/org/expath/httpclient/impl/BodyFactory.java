@@ -160,6 +160,10 @@ public class BodyFactory {
 
     /**
      * Look for the header Content-Type in a header set and decode it.
+     *
+     * @param headers the headers to parse the Content-Type from
+     * @return the Content-Type representation
+     * @throws HttpClientException if the headers are null
      */
     public static Type parseType(final HeaderSet headers) throws HttpClientException {
         final Header h = headers.getFirstHeader("Content-Type");
@@ -172,6 +176,10 @@ public class BodyFactory {
 
     /**
      * Decode the content type from a ContentType object.
+     *
+     * @param type the content type
+     * @return the Content-Type representation
+     * @throws HttpClientException if the headers are null, or the content type cannot be found
      */
     public static Type parseType(@Nullable final ContentType type) throws HttpClientException {
         if (type == null) {

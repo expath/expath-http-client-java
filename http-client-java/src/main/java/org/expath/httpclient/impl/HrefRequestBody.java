@@ -32,6 +32,10 @@ public class HrefRequestBody
 {
     /**
      * TODO: Check there is no other attributes (only @src and @media-type)...
+     *
+     * @param elem the request body element
+     *
+     * @throws HttpClientException if the request body element is invalid
      */
     public HrefRequestBody(Element elem)
             throws HttpClientException

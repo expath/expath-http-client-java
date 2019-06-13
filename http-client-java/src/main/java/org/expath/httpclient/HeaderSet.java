@@ -39,6 +39,9 @@ public class HeaderSet
 
     /**
      * Build a new object by *copying* its parameter.
+     *
+     * @param headers the headers to add to the set
+     * @throws HttpClientException if the headers are null
      */
     public HeaderSet(Header[] headers)
             throws HttpClientException
@@ -52,6 +55,9 @@ public class HeaderSet
 
     /**
      * Build a new object by *copying* its parameter.
+     *
+     * @param headers the headers to add to the set
+     * @throws HttpClientException if the headers are null
      */
     public HeaderSet(Collection<Header> headers)
             throws HttpClientException

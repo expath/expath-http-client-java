@@ -385,6 +385,8 @@ public class Base64
      * Encodes or decodes two files from the command line;
      * <strong>feel free to delete this method (in fact you probably should)
      * if you're embedding this code into a larger program.</strong>
+     *
+     * @param args the program arguments
      */
     public final static void main( String[] args )
     {
@@ -621,6 +623,9 @@ public class Base64
      *
      * @param source The data to convert
      * @since 1.4
+     *
+     * @param source the source bytes to encode
+     * @return the Base64 encoded string
      */
     public static String encodeBytes( byte[] source )
     {
@@ -645,6 +650,7 @@ public class Base64
      *
      * @param source The data to convert
      * @param options Specified options
+     * @return the Base64 encoded string
      * @see Base64#GZIP
      * @see Base64#DONT_BREAK_LINES
      * @since 2.0
@@ -662,6 +668,7 @@ public class Base64
      * @param source The data to convert
      * @param off Offset in array where conversion should begin
      * @param len Length of data to convert
+     * @return the Base64 encoded string
      * @since 1.4
      */
     public static String encodeBytes( byte[] source, int off, int len )
@@ -690,6 +697,7 @@ public class Base64
      * @param len Length of data to convert
      * @param options Specified options
 	 * @param options alphabet type is pulled from this (standard, url-safe, ordered)
+     * @return the Base64 encoded string
      * @see Base64#GZIP
      * @see Base64#DONT_BREAK_LINES
      * @since 2.0
@@ -895,7 +903,8 @@ public class Base64
      * @param source The Base64 encoded data
      * @param off    The offset of where to begin decoding
      * @param len    The length of characters to decode
-     * @return decoded data
+     * @param options encode options such as URL_SAFE
+     * @return the Base64 decoded bytes
      * @since 1.3
      */
     public static byte[] decode( byte[] source, int off, int len, int options )
@@ -1713,6 +1722,7 @@ public class Base64
          * @param theBytes array from which to read bytes
          * @param off offset for array
          * @param len max number of bytes to read into array
+         * @throws java.io.IOException if an IO error occurs
          * @since 1.3
          */
         public void write( byte[] theBytes, int off, int len ) throws java.io.IOException
@@ -1736,6 +1746,8 @@ public class Base64
         /**
          * Method added by PHIL. [Thanks, PHIL. -Rob]
          * This pads the buffer without closing the stream.
+         *
+         * @throws java.io.IOException if an IO error occurs
          */
         public void flushBase64() throws java.io.IOException
         {
@@ -1780,6 +1792,7 @@ public class Base64
          * May be helpful if you need to embed a piece of
          * base640-encoded data in a stream.
          *
+         * @throws java.io.IOException if an IO error occurs
          * @since 1.5.1
          */
         public void suspendEncoding() throws java.io.IOException

@@ -70,6 +70,7 @@ public interface Result
      * Add a string value to the result sequence.
      * 
      * @param string The string to add to the result sequence.
+     * @param encoding the charset encoding of the string.
      * @throws HttpClientException If any error occurs.
      */
     public void add(Reader string, Charset encoding)
