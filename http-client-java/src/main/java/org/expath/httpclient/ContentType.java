@@ -32,7 +32,7 @@ public class ContentType {
         this.myBoundary = boundary;
     }
 
-    public static ContentType parse(@Nullable final Header header, @Nullable final String overrideType, @Nullable final String defaultCharset) throws HttpClientException {
+    public static @Nullable ContentType parse(@Nullable final Header header, @Nullable final String overrideType, @Nullable final String defaultCharset) throws HttpClientException {
         final String type;
         final String charset;
         final String boundary;
@@ -82,9 +82,14 @@ public class ContentType {
 
         } else {
             // get the internet media type from the header
-            if (header == null || !"Content-Type".equalsIgnoreCase(header.getName())) {
-                throw new HttpClientException("Header is not content type");
+            if (header == null) {
+                return null;
             }
+
+            if (!"Content-Type".equalsIgnoreCase(header.getName())) {
+                throw new HttpClientException("Header is not Content-Type");
+            }
+
             final HeaderElement[] headerElements = header.getElements();
             if (headerElements.length > 1) {
                 throw new HttpClientException("Multiple Content-Type headers");

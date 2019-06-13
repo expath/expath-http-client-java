@@ -24,6 +24,8 @@ import org.expath.httpclient.HttpResponse;
 import org.expath.httpclient.HttpResponseBody;
 import org.expath.httpclient.model.Result;
 
+import javax.annotation.Nullable;
+
 /**
  * Implementation of a HTTP request.
  *
@@ -75,7 +77,7 @@ public class HttpRequestImpl
         return resp;
     }
 
-    private ContentType getContentType(final HeaderSet headers)
+    private @Nullable ContentType getContentType(final HeaderSet headers)
             throws HttpClientException
     {
         final Header header = headers.getFirstHeader("Content-Type");

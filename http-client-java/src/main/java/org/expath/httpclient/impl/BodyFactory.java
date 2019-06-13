@@ -26,6 +26,8 @@ import org.expath.httpclient.model.Result;
 import org.expath.tools.model.Element;
 import org.expath.tools.model.Sequence;
 
+import javax.annotation.Nullable;
+
 
 /**
  * Factory class for bodies, either in requests or in responses.
@@ -171,7 +173,7 @@ public class BodyFactory {
     /**
      * Decode the content type from a ContentType object.
      */
-    public static Type parseType(final ContentType type) throws HttpClientException {
+    public static Type parseType(@Nullable final ContentType type) throws HttpClientException {
         if (type == null) {
             throw new HttpClientException("impossible to find the content type");
         }
