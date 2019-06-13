@@ -1,21 +1,4 @@
 *.iml
 .idea/
 
-/build/expath-http-client-java-*/
-/build/expath-http-client-saxon-*/
-/build/expath-http-client-java-*.zip
-/build/expath-http-client-saxon-*.xar
-/build/expath-http-client-saxon-*.zip
-/http-client-java/nbproject/private/
-/http-client-java/nbproject/genfiles.properties
-/http-client-java/build/
-/http-client-java/dist/
-/http-client-java/src/org/expath/httpclient/version.properties
-/http-client-saxon/nbproject/private/
-/http-client-saxon/nbproject/genfiles.properties
-/http-client-saxon/build/
-/http-client-saxon/dist/
-/http-client-saxon/src/org/expath/httpclient/saxon/version.properties
-
-/http-client-java/target/
-/http-client-saxon/target/
+target/
