@@ -40,7 +40,7 @@
         <dependency>
             <groupId>org.expath.packaging</groupId>
             <artifactId>pkg-saxon</artifactId>
-            <version>1.3.0</version>
+            <version>1.4.1</version>
         </dependency>
         <dependency>
             <groupId>net.sf.saxon</groupId>
