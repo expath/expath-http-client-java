@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.expath.http.client</groupId>
         <artifactId>http-client-parent</artifactId>
-        <version>1.2.2-SNAPSHOT</version>
+        <version>1.2.2</version>
         <relativePath>../http-client-parent/pom.xml</relativePath>
     </parent>
 
@@ -19,7 +19,7 @@
         <connection>scm:git:https://github.com/expath/expath-http-client-java.git</connection>
         <developerConnection>scm:git:https://github.com/expath/expath-http-client-java.git</developerConnection>
         <url>scm:git:https://github.com/expath/expath-http-client-java.git</url>
-      <tag>HEAD</tag>
+      <tag>http-client-1.2.2</tag>
   </scm>
 
     <build>
