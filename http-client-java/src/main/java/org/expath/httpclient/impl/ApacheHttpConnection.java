@@ -365,6 +365,8 @@ public class ApacheHttpConnection
         // do follow redirections?
         if(myFollowRedirect) {
             clientBuilder.setRedirectStrategy(LaxRedirectStrategy.INSTANCE);
+        } else {
+            clientBuilder.disableRedirectHandling();
         }
 
         // the shared cookie store
