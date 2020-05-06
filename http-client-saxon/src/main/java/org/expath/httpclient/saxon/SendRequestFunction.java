@@ -82,12 +82,15 @@ public class SendRequestFunction
     public SequenceType[] getArgumentTypes()
     {
         // 1/ element(http:request)
-        final int      one    = StaticProperty.EXACTLY_ONE;
-        final int      kind   = Type.ELEMENT;
-        final String   uri    = HttpConstants.HTTP_CLIENT_NS_URI;
-        final NamePool pool   = myConfig.getNamePool();
-        final ItemType itype  = new NameTest(kind, uri, "request", pool);
-        SequenceType   stype1 = SequenceType.makeSequenceType(itype, one);
+        final SequenceType stype1;
+        if (myConfig != null) {
+            final NamePool pool = myConfig.getNamePool();
+            final ItemType itype = new NameTest(Type.ELEMENT, HttpConstants.HTTP_CLIENT_NS_URI, "request", pool);
+            stype1 = SequenceType.makeSequenceType(itype, StaticProperty.EXACTLY_ONE);
+        } else {
+            stype1 = SequenceType.SINGLE_ELEMENT_NODE;
+        }
+
         // 2/ xs:string?
         SequenceType   stype2 = SequenceType.OPTIONAL_STRING;
         // 3/ item()*
