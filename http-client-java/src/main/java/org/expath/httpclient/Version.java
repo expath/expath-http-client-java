@@ -7,7 +7,7 @@
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.httpclient.saxon;
+package org.expath.httpclient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,22 +24,33 @@ public class Version
     protected Version()
     {
         // the version.properties file
-        InputStream rsrc = Version.class.getResourceAsStream(VER_PROP);
-        if ( rsrc == null ) {
-            throw new IllegalStateException("Version properties file does not exist: " + VER_PROP);
-        }
-        // load into a Properties object
-        Properties props = new Properties();
+        InputStream rsrc = null;
         try {
-            props.load(rsrc);
-            rsrc.close();
+            rsrc = getClass().getResourceAsStream(VER_PROP);
+            if (rsrc == null) {
+                throw new IllegalStateException("Version properties file does not exist: " + VER_PROP);
+            }
+
+            // load into a Properties object
+            final Properties props = new Properties();
+            try {
+                props.load(rsrc);
+            } catch (IOException ex) {
+                throw new IllegalStateException("Error reading the version properties: " + VER_PROP, ex);
+            }
+
+            // get both properties
+            myVersion = props.getProperty("org.expath.httpclient.version");
+            myRevision = props.getProperty("org.expath.httpclient.revision");
+        } finally {
+            if (rsrc != null) {
+                try {
+                    rsrc.close();
+                } catch (final IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-        catch ( IOException ex ) {
-            throw new IllegalStateException("Error reading the version properties: " + VER_PROP, ex);
-        }
-        // get both properties
-        myVersion  = props.getProperty("org.expath.httpclient.saxon.version");
-        myRevision = props.getProperty("org.expath.httpclient.saxon.revision");
     }
 
     public static void main(String[] args)
@@ -49,7 +60,7 @@ public class Version
 
     public void display(PrintStream out)
     {
-        out.println("EXPath HTTP Client for Saxon.");
+        out.println("EXPath HTTP Client for Java.");
         out.println("Version: " + getVersion() + " (revision #" + getRevision() + ")");
     }
 
@@ -71,7 +82,7 @@ public class Version
         return myRevision;
     }
 
-    private static final String  VER_PROP = "/org/expath/httpclient/saxon/version.properties";
+    private static final String  VER_PROP = "version.properties";
     private static Version INSTANCE = null;
     private String myVersion;
     private String myRevision;
