@@ -24,6 +24,7 @@ import org.expath.tools.ToolsException;
 import org.expath.tools.model.Element;
 import org.expath.tools.saxon.model.SaxonElement;
 import org.expath.tools.saxon.model.SaxonSequence;
+import org.expath.tools.saxon.util.SequenceIteratorFactory;
 
 /**
  * TODO: Doc...
@@ -39,7 +40,7 @@ public class SendRequestCall
     {
         NodeInfo request = null;
         String   href    = null;
-        Sequence bodies  = null;
+        Sequence bodies = null;
         switch ( params.length ) {
             case 3:
                 bodies = params[2];
@@ -51,8 +52,13 @@ public class SendRequestCall
             default:
                 throw new XPathException("Incorrect number of params: " + params.length);
         }
-        SequenceIterator iter = bodies == null ? null : bodies.iterate();
-        SaxonSequence seq = new SaxonSequence(iter, ctxt);
+        final Sequence bodiesCapture = bodies;
+        SaxonSequence seq = new SaxonSequence(new SequenceIteratorFactory() {
+            @Override
+            public SequenceIterator newIterator() throws XPathException {
+                return bodiesCapture == null ? null : bodiesCapture.iterate();
+            }
+        }, ctxt);
         SaxonResult result = new SaxonResult(ctxt, HttpConstants.HTTP_CLIENT_NS_URI);
         try {
             Element elem = new SaxonElement(request, ctxt);

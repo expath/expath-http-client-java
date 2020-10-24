@@ -49,7 +49,7 @@ public class GContactTest
         // the initial template
         trans.setInitialTemplate(new QName("main"));
         // the output (to stdout)
-        Serializer out = new Serializer();
+        Serializer out = proc.newSerializer();
         out.setOutputStream(System.out);
         trans.setDestination(out);
         // the authentication params

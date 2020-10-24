@@ -30,7 +30,7 @@
         <dependency>
             <groupId>org.expath.tools</groupId>
             <artifactId>tools-saxon</artifactId>
-            <version>0.4.0</version>
+            <version>0.6.0</version>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>org.expath.packaging</groupId>
             <artifactId>pkg-saxon</artifactId>
-            <version>1.4.2</version>
+            <version>1.5.0</version>
         </dependency>
         <dependency>
             <groupId>net.sf.saxon</groupId>

@@ -116,11 +116,13 @@ public class SinglePartRequestBody
         catch ( ToolsException ex ) {
             throw new HttpClientException("Invalid attributes", ex);
         }
-        // handle childs
-        myChilds = getBodyElement().getContent();
-        // If there is no content in the http:body element, take the next item
-        // in the $bodies parameter.
+
         try {
+            // handle childs
+            myChilds = getBodyElement().getContent();
+            // If there is no content in the http:body element, take the next item
+            // in the $bodies parameter.
+
             if ( myChilds.isEmpty() ) {
                 Sequence body = bodies.next();
                 if ( body == null ) {

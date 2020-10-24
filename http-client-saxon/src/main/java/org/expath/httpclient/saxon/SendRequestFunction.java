@@ -15,6 +15,7 @@ import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.pattern.NameTest;
+import net.sf.saxon.pattern.NodeKindTest;
 import net.sf.saxon.type.AnyItemType;
 import net.sf.saxon.type.ItemType;
 import net.sf.saxon.type.Type;
@@ -88,7 +89,7 @@ public class SendRequestFunction
             final ItemType itype = new NameTest(Type.ELEMENT, HttpConstants.HTTP_CLIENT_NS_URI, "request", pool);
             stype1 = SequenceType.makeSequenceType(itype, StaticProperty.EXACTLY_ONE);
         } else {
-            stype1 = SequenceType.SINGLE_ELEMENT_NODE;
+            stype1 = SequenceType.makeSequenceType(NodeKindTest.ELEMENT, StaticProperty.EXACTLY_ONE);
         }
 
         // 2/ xs:string?
