@@ -26,8 +26,8 @@ $ mvn clean package
 
 # Using the Saxon RI
 
-To use the RI for Saxon, you require two Jar files to be present on the classpath with Saxon:
-`http-client-saxon-VERSION.jar`, and `http-client-java-VERSION.jar`.
+To use the RI for Saxon, you require several Jar files to be present on the classpath with Saxon:
+`http-client-saxon-VERSION.jar`, `http-client-java-VERSION.jar`, and the dependencies of `http-client-java`; to make this easier we provide an Uber Jar, whereby you can just place `http-client-saxon-VERSION-uber.jar` onto Saxon's classpath.
 If you have built from source these can be found in the respective folders: `http-client-saxon/target/`,
 and `http-client-java/target/`, alternatively you may download the releases from
 [Maven Central](https://search.maven.org/search?q=g:org.expath.http.client).
