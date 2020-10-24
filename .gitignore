@@ -1,4 +1,12 @@
+# Maven builds
+target/
+
+# IntelliJ project files
 *.iml
 .idea/
 
-target/
+# NetBeans project files
+build.xml
+nbproject/
+lib/
+build/
