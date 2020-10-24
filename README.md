@@ -24,7 +24,11 @@ $ cd expath-http-client-java
 $ mvn clean package
 ```
 
+**NOTE:** Where `.sh` files are specified below, the equivalent `.bat` files also exist for Microsoft Windows users.
+
 # Using the Saxon RI
+
+*Additional Saxon specific examples can be found in [http-client-saxon/README.md](http-client-saxon/README.md)*.
 
 To use the RI for Saxon, you require several Jar files to be present on the classpath with Saxon:
 `http-client-saxon-VERSION.jar`, `http-client-java-VERSION.jar`, and the dependencies of `http-client-java`; to make this easier we provide an Uber Jar, whereby you can just place `http-client-saxon-VERSION-uber.jar` onto Saxon's classpath.
