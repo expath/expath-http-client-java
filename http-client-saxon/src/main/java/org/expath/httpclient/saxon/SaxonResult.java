@@ -97,7 +97,10 @@ public class SaxonResult
             throws HttpClientException
     {
         try {
-            Item doc = myCtxt.getConfiguration().buildDocument(src);
+            Item doc = myCtxt
+                    .getConfiguration()
+                    .buildDocumentTree(src)
+                    .getRootNode();
             myItems.add(doc);
         }
         catch ( XPathException ex ) {
