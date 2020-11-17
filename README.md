@@ -28,6 +28,13 @@ $ mvn clean package
 
 # Using the Saxon RI
 
+**Compatibility with Saxon Versions**
+
+| http-client-saxon Version | Saxon Versions |
+|---------------------------|----------------|
+| 1.3.0                     | 9.9+           |
+| &lt;= 1.2.4               | 9.7+           |
+
 *Additional Saxon specific examples can be found in [http-client-saxon/README.md](http-client-saxon/README.md)*.
 
 To use the RI for Saxon, you require several Jar files to be present on the classpath with Saxon:
