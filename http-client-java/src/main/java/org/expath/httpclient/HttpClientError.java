@@ -18,12 +18,12 @@ import javax.xml.namespace.QName;
  * An error as defined by the EXPath HTTP Client specification.
  */
 public enum HttpClientError implements ExpathError {
-  HC001("HC01", "An HTTP error occurred"),
-  HC002("HC02", "Error parsing the entity content as XML or HTML."),
-  HC003("HC03", "With a multipart response, the override-media-type must be either a multipart media type or application/octet-stream."),
-  HC004("HC04", "The src attribute on the body element is mutually exclusive with all other attribute (except the media-type)."),
-  HC005("HC05", "The request element is not valid."),
-  HC006("HC06", "A timeout occurred waiting for the response.");
+  HC001("HC001", "An HTTP error occurred"),
+  HC002("HC002", "Error parsing the entity content as XML or HTML."),
+  HC003("HC003", "With a multipart response, the override-media-type must be either a multipart media type or application/octet-stream."),
+  HC004("HC004", "The src attribute on the body element is mutually exclusive with all other attribute (except the media-type)."),
+  HC005("HC005", "The request element is not valid."),
+  HC006("HC006", "A timeout occurred waiting for the response.");
 
   private final QName name;
   private final String description;
