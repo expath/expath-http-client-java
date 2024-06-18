@@ -127,12 +127,12 @@ public class SaxonResult
     public SequenceIterator newIterator()
     {
         Item[] array = myItems.toArray(new Item[0]);
-        return new ArrayIterator(array);
+        return new ArrayIterator.Of(array);
     }
 
     public Sequence newSequence()
     {
-        return new SequenceExtent(myItems);
+        return SequenceExtent.makeSequenceExtent(myItems);
     }
 
     private final List<Item>   myItems;

@@ -13,6 +13,7 @@ import net.sf.saxon.Configuration;
 import net.sf.saxon.expr.StaticProperty;
 import net.sf.saxon.lib.ExtensionFunctionCall;
 import net.sf.saxon.om.NamePool;
+import net.sf.saxon.om.NamespaceUri;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.pattern.NameTest;
 import net.sf.saxon.pattern.NodeKindTest;
@@ -86,7 +87,7 @@ public class SendRequestFunction
         final SequenceType stype1;
         if (myConfig != null) {
             final NamePool pool = myConfig.getNamePool();
-            final ItemType itype = new NameTest(Type.ELEMENT, HttpConstants.HTTP_CLIENT_NS_URI, "request", pool);
+            final ItemType itype = new NameTest(Type.ELEMENT, NamespaceUri.of(HttpConstants.HTTP_CLIENT_NS_URI), "request", pool);
             stype1 = SequenceType.makeSequenceType(itype, StaticProperty.EXACTLY_ONE);
         } else {
             stype1 = SequenceType.makeSequenceType(NodeKindTest.ELEMENT, StaticProperty.EXACTLY_ONE);
