@@ -10,7 +10,7 @@
 package org.expath.httpclient.saxon;
 
 import net.sf.saxon.expr.XPathContext;
-import org.apache.http.Header;
+import org.apache.hc.core5.http.Header;
 import org.expath.httpclient.HeaderSet;
 import org.expath.httpclient.HttpClientError;
 import org.expath.httpclient.HttpClientException;

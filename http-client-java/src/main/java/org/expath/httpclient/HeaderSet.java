@@ -14,9 +14,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.message.BasicHeader;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HeaderElement;
+import org.apache.hc.core5.http.message.BasicHeader;
 
 /**
  * TODO: Doc...

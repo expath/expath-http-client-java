@@ -9,10 +9,20 @@
 
 package org.expath.httpclient.impl;
 
-import org.expath.httpclient.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.http.Header;
+import org.apache.hc.core5.http.Header;
+import org.expath.httpclient.ContentType;
+import org.expath.httpclient.HeaderSet;
+import org.expath.httpclient.HttpClientError;
+import org.expath.httpclient.HttpClientException;
+import org.expath.httpclient.HttpRequestBody;
+import org.expath.httpclient.HttpConnection;
+import org.expath.httpclient.HttpConstants;
+import org.expath.httpclient.HttpCredentials;
+import org.expath.httpclient.HttpRequest;
+import org.expath.httpclient.HttpResponse;
+import org.expath.httpclient.HttpResponseBody;
 import org.expath.httpclient.model.Result;
 
 import javax.annotation.Nullable;
