@@ -1,5 +1,4 @@
-[![Build Status](https://travis-ci.com/expath/expath-http-client-java.svg?branch=master)](https://travis-ci.com/expath/expath-http-client-java)
-[![Build status](https://ci.appveyor.com/api/projects/status/o090g9b807036qh6/branch/master?svg=true)](https://ci.appveyor.com/project/AdamRetter/expath-http-client-java/branch/master)
+[![Build Status](https://github.com/expath/expath-http-client-java/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/expath/expath-http-client-java/actions/workflows/ci.yml)
 [![Java 8+](https://img.shields.io/badge/java-7%2B-blue.svg)](https://adoptopenjdk.net/)
 [![License](https://img.shields.io/badge/license-MPL%201.0-blue.svg)](https://www-archive.mozilla.org/mpl/MPL-1.0.txt)
 [![Maven Central](https://img.shields.io/maven-central/v/org.expath.http.client/http-client.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.expath.http.client%22%20AND%20a:%22http-client%22)
