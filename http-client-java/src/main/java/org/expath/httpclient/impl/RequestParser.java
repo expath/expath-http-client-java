@@ -148,7 +148,6 @@ public class RequestParser
         // walk the elements
         // TODO: Check element structure validity (header*, (multipart|body)?)
         HeaderSet headers = new HeaderSet();
-        req.setHeaders(headers);
         for ( Element child : myRequest.children() ) {
             String local = child.getLocalName();
             String ns = child.getNamespaceUri();
@@ -174,6 +173,7 @@ public class RequestParser
                 throw new HttpClientException(HttpClientError.HC005, "Unknown element: " + local);
             }
         }
+        req.setHeaders(headers);
 
         return req;
     }

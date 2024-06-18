@@ -14,10 +14,18 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.Header;
-import org.expath.httpclient.*;
+import org.apache.http.message.BasicHeader;
+import org.expath.httpclient.ContentType;
+import org.expath.httpclient.HeaderSet;
+import org.expath.httpclient.HttpClientError;
+import org.expath.httpclient.HttpClientException;
+import org.expath.httpclient.HttpConstants;
+import org.expath.httpclient.HttpRequestBody;
 import org.expath.tools.ToolsException;
 import org.expath.tools.model.Element;
 import org.expath.tools.model.Sequence;
+
+import javax.annotation.Nullable;
 
 /**
  * A multipart body in the request.
@@ -59,7 +67,9 @@ public class MultipartRequestBody
             throws HttpClientException
     {
         // set the Content-Type header (if not set by the user)
-        if ( headers.getFirstHeader("Content-Type") == null ) {
+        @Nullable final Header explicitContentTypeHeader = headers.getFirstHeader("Content-Type");
+
+        if ( explicitContentTypeHeader == null ) {
             StringBuilder type = new StringBuilder(getContentType());
             type.append("; boundary=");
             type.append("\"");
@@ -71,6 +81,14 @@ public class MultipartRequestBody
             }
             type.append("\"");
             headers.add("Content-Type", type.toString());
+        } else {
+            // if the outer explicit http:header/@name="Content-Type" is not same as the http:multipart/@media-type then we have an invalid conflict
+            final ContentType explicitContentType = ContentType.parse(explicitContentTypeHeader, null, null);
+            final ContentType multipartMediaType =  ContentType.parse(new BasicHeader("Content-Type", getContentType()), null, null);
+
+            if (!explicitContentType.getType().equals(multipartMediaType.getType())) {
+                throw new HttpClientException(HttpClientError.HC007, "http:header/@name=\"Content-Type\" is " + explicitContentType.getType() + ", but http:multipart/@media-type is " + multipartMediaType.getType());
+            }
         }
     }
 

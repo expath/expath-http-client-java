@@ -23,7 +23,8 @@ public enum HttpClientError implements ExpathError {
   HC003("HC003", "With a multipart response, the override-media-type must be either a multipart media type or application/octet-stream."),
   HC004("HC004", "The src attribute on the body element is mutually exclusive with all other attribute (except the media-type)."),
   HC005("HC005", "The request element is not valid."),
-  HC006("HC006", "A timeout occurred waiting for the response.");
+  HC006("HC006", "A timeout occurred waiting for the response."),
+  HC007("HC007", "Multipart @media-type conflicts with outer Content-Type header");
 
   private final QName name;
   private final String description;
