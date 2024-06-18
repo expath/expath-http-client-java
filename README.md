@@ -1,5 +1,5 @@
 [![Build Status](https://github.com/expath/expath-http-client-java/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/expath/expath-http-client-java/actions/workflows/ci.yml)
-[![Java 8+](https://img.shields.io/badge/java-7%2B-blue.svg)](https://adoptopenjdk.net/)
+[![Java 8+](https://img.shields.io/badge/java-8%2B-blue.svg)](https://adoptopenjdk.net/)
 [![License](https://img.shields.io/badge/license-MPL%201.0-blue.svg)](https://www-archive.mozilla.org/mpl/MPL-1.0.txt)
 [![Maven Central](https://img.shields.io/maven-central/v/org.expath.http.client/http-client.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.expath.http.client%22%20AND%20a:%22http-client%22)
 
@@ -14,7 +14,7 @@ the library.
 # Building from source
 
 Requires:
-* Java 1.7 or newer
+* Java 1.8 or newer
 * Maven 3 or newer
 
 ```bash
@@ -31,6 +31,7 @@ $ mvn clean package
 
 | http-client-saxon Version | Saxon Versions |
 |---------------------------|----------------|
+| 1.4.0+                    | 10.3+          |
 | 1.3.0                     | 9.9+           |
 | &lt;= 1.2.4               | 9.7+           |
 
