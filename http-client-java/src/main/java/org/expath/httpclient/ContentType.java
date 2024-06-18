@@ -9,9 +9,10 @@
 
 package org.expath.httpclient;
 
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.NameValuePair;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HeaderElement;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.MessageSupport;
 
 import javax.annotation.Nullable;
 
@@ -50,7 +51,7 @@ public class ContentType {
                 if (header == null || !"Content-Type".equalsIgnoreCase(header.getName())) {
                     throw new HttpClientException(HttpClientError.HC001, "Header is not content type");
                 }
-                final HeaderElement[] headerElements = header.getElements();
+                final HeaderElement[] headerElements = MessageSupport.parse(header);
                 if (headerElements.length > 1) {
                     throw new HttpClientException(HttpClientError.HC001, "Multiple Content-Type headers");
                 }
@@ -71,7 +72,7 @@ public class ContentType {
                 if (header == null || !"Content-Type".equalsIgnoreCase(header.getName())) {
                     throw new HttpClientException(HttpClientError.HC001, "Header is not content type");
                 }
-                final HeaderElement[] headerElements = header.getElements();
+                final HeaderElement[] headerElements = MessageSupport.parse(header);
                 if (headerElements.length > 1) {
                     throw new HttpClientException(HttpClientError.HC001, "Multiple Content-Type headers");
                 }
@@ -90,7 +91,7 @@ public class ContentType {
                 throw new HttpClientException(HttpClientError.HC001, "Header is not Content-Type");
             }
 
-            final HeaderElement[] headerElements = header.getElements();
+            final HeaderElement[] headerElements = MessageSupport.parse(header);
             if (headerElements.length > 1) {
                 throw new HttpClientException(HttpClientError.HC001, "Multiple Content-Type headers");
             }

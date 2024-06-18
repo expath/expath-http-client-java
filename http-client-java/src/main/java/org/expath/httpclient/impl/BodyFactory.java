@@ -13,10 +13,17 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.message.BasicHeader;
-import org.expath.httpclient.*;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HeaderElement;
+import org.apache.hc.core5.http.message.BasicHeader;
+import org.apache.hc.core5.http.message.MessageSupport;
+import org.expath.httpclient.ContentType;
+import org.expath.httpclient.HeaderSet;
+import org.expath.httpclient.HttpClientError;
+import org.expath.httpclient.HttpClientException;
+import org.expath.httpclient.HttpConnection;
+import org.expath.httpclient.HttpRequestBody;
+import org.expath.httpclient.HttpResponseBody;
 import org.expath.httpclient.model.Result;
 import org.expath.tools.model.Element;
 import org.expath.tools.model.Sequence;
@@ -205,7 +212,7 @@ public class BodyFactory {
                 throw new HttpClientException(HttpClientError.HC001, "@media-type is not set on http:body");
             }
             final Header mediaTypeHeader = new BasicHeader("Media-Type", mediaType);
-            final HeaderElement[] mediaTypeHeaderElems = mediaTypeHeader.getElements();
+            final HeaderElement[] mediaTypeHeaderElems = MessageSupport.parse(mediaTypeHeader);
             if (mediaTypeHeaderElems == null || mediaTypeHeaderElems.length == 0) {
                 throw new HttpClientException(HttpClientError.HC001, "@media-type is not set on http:body");
             } else if (mediaTypeHeaderElems.length > 1) {

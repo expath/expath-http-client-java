@@ -10,7 +10,7 @@
 package org.expath.httpclient.impl;
 
 import java.net.URI;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 
 /**
  * Implements any HTTP extension method, without any entity content.
@@ -23,35 +23,22 @@ import org.apache.http.client.methods.HttpRequestBase;
  * @author Florent Georges
  */
 public class AnyEmptyMethod
-        extends HttpRequestBase
+        extends BasicClassicHttpRequest
 {
     public AnyEmptyMethod(String method)
     {
-        super();
-        METHOD_NAME = method;
+        super(method, (String) null);
     }
 
     public AnyEmptyMethod(String method, URI uri)
     {
-        super();
-        METHOD_NAME = method;
-        setURI(uri);
+        super(method, uri);
     }
 
     public AnyEmptyMethod(String method, String uri)
     {
-        super();
-        METHOD_NAME = method;
-        setURI(URI.create(uri));
+        super(method, URI.create(uri));
     }
-
-    @Override
-    public String getMethod()
-    {
-        return METHOD_NAME;
-    }
-
-    public String METHOD_NAME;
 }
 
 

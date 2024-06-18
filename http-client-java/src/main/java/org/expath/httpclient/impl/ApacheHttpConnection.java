@@ -15,42 +15,69 @@ import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
 import net.jcip.annotations.NotThreadSafe;
-import org.expath.httpclient.*;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpVersion;
+import org.apache.hc.core5.http.config.Registry;
+import org.apache.hc.core5.http.config.RegistryBuilder;
+import org.apache.hc.core5.http.io.entity.AbstractHttpEntity;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
+import org.apache.hc.core5.http.message.StatusLine;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.io.IOCallback;
+import org.apache.hc.core5.ssl.SSLContexts;
+import org.apache.hc.core5.util.Args;
+import org.apache.hc.core5.util.TimeValue;
+import org.apache.hc.client5.http.auth.AuthScheme;
+import org.apache.hc.client5.http.auth.AuthScope;
+import org.apache.hc.client5.http.auth.Credentials;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.auth.AuthCache;
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
+import org.apache.hc.client5.http.cookie.CookieStore;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.cookie.StandardCookieSpec;
+import org.apache.hc.client5.http.entity.GzipCompressingEntity;
+import org.apache.hc.client5.http.classic.methods.HttpDelete;
+import org.apache.hc.client5.http.classic.methods.HttpHead;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpOptions;
+import org.apache.hc.client5.http.classic.methods.HttpPatch;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.client5.http.classic.methods.HttpTrace;
+import org.apache.hc.client5.http.impl.DefaultRedirectStrategy;
+import org.apache.hc.client5.http.impl.auth.BasicAuthCache;
+import org.apache.hc.client5.http.impl.auth.BasicCredentialsProvider;
+import org.apache.hc.client5.http.impl.auth.BasicScheme;
+import org.apache.hc.client5.http.impl.auth.DigestScheme;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.routing.SystemDefaultRoutePlanner;
+import org.apache.hc.client5.http.protocol.HttpClientContext;
+import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
+import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
+import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
+import org.expath.httpclient.HeaderSet;
+import org.expath.httpclient.HttpClientError;
+import org.expath.httpclient.HttpClientException;
+import org.expath.httpclient.HttpConnection;
+import org.expath.httpclient.HttpConstants;
+import org.expath.httpclient.HttpCredentials;
+import org.expath.httpclient.HttpRequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpVersion;
-import org.apache.http.auth.AuthScheme;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.AuthCache;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.entity.GzipCompressingEntity;
-import org.apache.http.client.methods.*;
-import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.ContentProducer;
-import org.apache.http.entity.EntityTemplate;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.auth.DigestScheme;
-import org.apache.http.impl.client.*;
-import org.apache.http.impl.conn.*;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.ssl.SSLContexts;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
@@ -80,7 +107,7 @@ public class ApacheHttpConnection
             throw new HttpClientException(HttpClientError.HC001, "setRequestMethod has not been called before");
         }
 
-        myRequest.setProtocolVersion(myVersion);
+        myRequest.setVersion(myVersion);
 
         try {
             // make a new client
@@ -100,12 +127,12 @@ public class ApacheHttpConnection
             // log the request headers?
             if ( LOG.isDebugEnabled() ) {
                 LOG.debug("METHOD: " + myRequest.getMethod());
-                Header[] headers = myRequest.getAllHeaders();
+                Header[] headers = myRequest.getHeaders();
                 LoggerHelper.logHeaders(LOG, "REQ HEADERS", headers);
                 LoggerHelper.logCookies(LOG, "COOKIES", COOKIES.getCookies());
             }
             // send the request
-            myResponse = myClient.execute(myRequest, clientContext);
+            myResponse = myClient.execute(myRequest, clientContext);  //TODO(AR) use execute method that takes additional HttpClientResponseHandler instead
 
             // TODO: Handle 'Connection' headers (for instance "Connection: close")
             // See for instance http://www.jmarshall.com/easy/http/.
@@ -113,7 +140,7 @@ public class ApacheHttpConnection
 
             // log the response headers?
             if ( LOG.isDebugEnabled() ) {
-                Header[] headers = myResponse.getAllHeaders();
+                Header[] headers = myResponse.getHeaders();
                 LoggerHelper.logHeaders(LOG, "RESP HEADERS", headers);
                 LoggerHelper.logCookies(LOG, "COOKIES", COOKIES.getCookies());
             }
@@ -212,6 +239,9 @@ public class ApacheHttpConnection
         }
         else if ( "OPTIONS".equals(m) ) {
             myRequest = new HttpOptions(uri);
+        }
+        else if ( "PATCH".equals(m) ) {
+            myRequest = new HttpPatch(uri);
         }
         else if ( "POST".equals(m) ) {
             myRequest = new HttpPost(uri);
@@ -315,18 +345,18 @@ public class ApacheHttpConnection
 
     public int getResponseStatus()
     {
-        return myResponse.getStatusLine().getStatusCode();
+        return new StatusLine(myResponse).getStatusCode();
     }
 
     public String getResponseMessage()
     {
-        return myResponse.getStatusLine().getReasonPhrase();
+        return new StatusLine(myResponse).getReasonPhrase();
     }
 
     public HeaderSet getResponseHeaders()
             throws HttpClientException
     {
-        return new HeaderSet(myResponse.getAllHeaders());
+        return new HeaderSet(myResponse.getHeaders());
     }
 
     /**
@@ -359,7 +389,8 @@ public class ApacheHttpConnection
 
         // do follow redirections?
         if(myFollowRedirect) {
-            clientBuilder.setRedirectStrategy(LaxRedirectStrategy.INSTANCE);
+            //clientBuilder.setRedirectStrategy(LaxRedirectStrategy.INSTANCE);
+            clientBuilder.setRedirectStrategy(DefaultRedirectStrategy.INSTANCE);
         } else {
             clientBuilder.disableRedirectHandling();
         }
@@ -369,11 +400,12 @@ public class ApacheHttpConnection
 
         // set the timeout if any
         final RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
+        requestConfigBuilder.setCookieSpec(StandardCookieSpec.STRICT);
         if(myTimeout != null) {
             // See http://blog.jayway.com/2009/03/17/configuring-timeout-with-apache-httpclient-40/
             requestConfigBuilder
-                    .setConnectTimeout(myTimeout * 1000)
-                    .setSocketTimeout(myTimeout * 1000);
+                    .setConnectTimeout(myTimeout, TimeUnit.SECONDS);
+                    //.setSocketTimeout(myTimeout, TimeUnit.SECONDS);
         }
         clientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
 
@@ -392,7 +424,12 @@ public class ApacheHttpConnection
             return clientContext;
         }
 
-        final URI uri = myRequest.getURI();
+        final URI uri;
+        try {
+            uri = myRequest.getUri();
+        } catch (final URISyntaxException e) {
+            throw new HttpClientException(HttpClientError.HC005, "Unable to parse request uri: " + e.getMessage(), e);
+        }
         final String scheme = uri.getScheme();
         int port = uri.getPort();
         if (port == -1) {
@@ -406,7 +443,7 @@ public class ApacheHttpConnection
         }
         final String host = uri.getHost();
 
-        final HttpHost targetHost = new HttpHost(host, port, scheme);
+        final HttpHost targetHost = new HttpHost(scheme, host, port);
 
         final String user = cred.getUser();
         final String pwd = cred.getPwd();
@@ -416,16 +453,15 @@ public class ApacheHttpConnection
                     + " - " + user + " - ***");
         }
 
-        final Credentials c = new UsernamePasswordCredentials(user, pwd);
-        final AuthScope scope = new AuthScope(targetHost);
-
         if (clientContext.getCredentialsProvider() == null) {
-            clientContext.setCredentialsProvider(new BasicCredentialsProvider());
+            final Credentials c = new UsernamePasswordCredentials(user, pwd.toCharArray());
+            final AuthScope scope = new AuthScope(targetHost);
+            final BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(scope, c);
+            clientContext.setCredentialsProvider(credentialsProvider);
         } else {
-            clientContext.getCredentialsProvider().clear();
+            clientContext.setCredentialsProvider(null);
         }
-
-        clientContext.getCredentialsProvider().setCredentials(scope, c);
 
         // force preemptive authentication?
         // see - https://hc.apache.org/httpcomponents-client-ga/tutorial/html/authentication.html#d5e717
@@ -469,10 +505,16 @@ public class ApacheHttpConnection
             if(myChunked) {
                 // Take advantage of HTTP 1.1 chunked encoding to stream the
                 // payload directly to the request.
-                final ContentProducer producer = new RequestBodyProducer(body);
-                final EntityTemplate entityTemplate = new EntityTemplate(producer);
-                entityTemplate.setContentType(body.getContentType());
-                entityTemplate.setChunked(true);
+
+                // TODO(AR) do we need to set contentEncoding in this constructor if `myGzip` is set?
+                final AbstractHttpEntity entityTemplate = new ChunkedEntityTemplate(ContentType.parse(body.getContentType()), null, out -> {
+                    try {
+                        body.serialize(out);
+                    } catch (final HttpClientException ex) {
+                        throw new IOException("Error serializing the body content", ex);
+                    }
+                });
+
                 template = entityTemplate;
 
             } else {
@@ -483,7 +525,7 @@ public class ApacheHttpConnection
                  */
                 try (final ByteArrayOutputStream buffer = new ByteArrayOutputStream()) {
                     body.serialize(buffer);
-                    template = new ByteArrayEntity(buffer.toByteArray());
+                    template = new ByteArrayEntity(buffer.toByteArray(), ContentType.parse(body.getContentType()));
                 } catch (final IOException e) {
                     throw new HttpClientException(HttpClientError.HC001, e.getMessage(), e);
                 }
@@ -504,27 +546,18 @@ public class ApacheHttpConnection
                     try (final GZIPOutputStream gzip = new GZIPOutputStream(buffer)) {
                         body.serialize(gzip);
                     }
-                    myRequest.setHeader(HTTP.CONTENT_ENCODING, "gzip");
+                    myRequest.setHeader(HttpHeaders.CONTENT_ENCODING, "gzip");
                 } else {
                     body.serialize(buffer);
                 }
-                entity = new ByteArrayEntity(buffer.toByteArray());
+                entity = new ByteArrayEntity(buffer.toByteArray(), ContentType.parse(body.getContentType()));
             } catch (final IOException e) {
                 throw new HttpClientException(HttpClientError.HC001, e.getMessage(), e);
             }
         }
 
-        // cast the request
-        HttpEntityEnclosingRequestBase req = null;
-        if ( ! (myRequest instanceof HttpEntityEnclosingRequestBase) ) {
-            String msg = "Body not allowed on a " + myRequest.getMethod() + " request";
-            throw new HttpClientException(HttpClientError.HC001, msg);
-        }
-        else {
-            req = (HttpEntityEnclosingRequestBase) myRequest;
-        }
         // set the entity on the request
-        req.setEntity(entity);
+        myRequest.setEntity(entity);
     }
 
     private static PoolingHttpClientConnectionManager setupConnectionPool() {
@@ -538,8 +571,8 @@ public class ApacheHttpConnection
                 .register("http", PlainConnectionSocketFactory.INSTANCE)
                 .build();
 
-        final PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry, null, null, null, 15, TimeUnit.MINUTES);     //TODO(AR) TTL is currently 15 minutes, make configurable?
-        poolingHttpClientConnectionManager.setMaxTotal(40); //TODO(AR) total pooled connections is 40, make configurable?
+        final PoolingHttpClientConnectionManager poolingHttpClientConnectionManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry, null, null, TimeValue.of(15, TimeUnit.MINUTES));     //TODO(AR) TTL is currently 15 minutes, make configurable?
+        poolingHttpClientConnectionManager.setMaxTotal(40);             //TODO(AR) total pooled connections is 40, make configurable?
         poolingHttpClientConnectionManager.setDefaultMaxPerRoute(2);    //TODO(AR) max default connections per route is 2, make configurable?
         return poolingHttpClientConnectionManager;
     }
@@ -550,11 +583,11 @@ public class ApacheHttpConnection
      */
     private static class SSLSocketFactoryWithSNI extends SSLConnectionSocketFactory {
         public SSLSocketFactoryWithSNI(final SSLContext sslContext) {
-            super(sslContext);
+            super(sslContext, new String[] { "TLSv1.2", "TLSv1.3"}, null, null);
         }
 
         @Override
-        public Socket connectSocket(final int connectTimeout, final Socket socket, final HttpHost host,
+        public Socket connectSocket(final TimeValue connectTimeout, final Socket socket, final HttpHost host,
                 final InetSocketAddress remoteAddress, final InetSocketAddress localAddress, final HttpContext context)
                 throws IOException {
             if (socket instanceof SSLSocket) {
@@ -586,7 +619,7 @@ public class ApacheHttpConnection
     /** The Apache client. */
     private CloseableHttpClient myClient;
     /** The Apache request. */
-    private HttpRequestBase myRequest;
+    private ClassicHttpRequest myRequest;
     /** The Apache response. */
     private CloseableHttpResponse myResponse;
     /** The HTTP protocol version. */
@@ -634,29 +667,45 @@ public class ApacheHttpConnection
         }
     }
 
-    /**
-     * A request entity producer, generating content from an {@link HttpRequestBody}.
-     */
-    private static class RequestBodyProducer
-            implements ContentProducer
-    {
-        public RequestBodyProducer(HttpRequestBody body)
-        {
-            myBody = body;
+    private static class ChunkedEntityTemplate extends AbstractHttpEntity {
+        private final IOCallback<OutputStream> callback;
+
+        public ChunkedEntityTemplate(final ContentType contentType, final String contentEncoding, final IOCallback<OutputStream> callback) {
+            super(contentType, contentEncoding, true);
+            this.callback = Args.notNull(callback, "I/O callback");
         }
 
-        public void writeTo(OutputStream out)
-                throws IOException
-        {
-            try {
-                myBody.serialize(out);
-            }
-            catch ( HttpClientException ex ) {
-                throw new IOException("Error serializing the body content", ex);
-            }
+        @Override
+        public long getContentLength() {
+            return -1;  // not known!
         }
 
-        private HttpRequestBody myBody;
+        @Override
+        public InputStream getContent() throws IOException {
+            final ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            writeTo(buf);
+            return new ByteArrayInputStream(buf.toByteArray());
+        }
+
+        @Override
+        public boolean isRepeatable() {
+            return true;
+        }
+
+        @Override
+        public void writeTo(final OutputStream outStream) throws IOException {
+            Args.notNull(outStream, "Output stream");
+            this.callback.execute(outStream);
+        }
+
+        @Override
+        public boolean isStreaming() {
+            return false;
+        }
+
+        @Override
+        public void close() throws IOException {
+        }
     }
 }
 

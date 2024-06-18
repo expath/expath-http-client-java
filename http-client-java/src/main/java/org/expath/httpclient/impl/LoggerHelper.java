@@ -10,10 +10,11 @@
 package org.expath.httpclient.impl;
 
 import org.slf4j.Logger;
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.NameValuePair;
-import org.apache.http.cookie.Cookie;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HeaderElement;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.message.MessageSupport;
+import org.apache.hc.client5.http.cookie.Cookie;
 
 /**
  * Helper to log HTTP-specific stuff.
@@ -57,7 +58,7 @@ public class LoggerHelper
             }
             for ( Header h : headers ) {
                 log.debug(prompt + " - HEADER: " + h.getName() + ": " + h.getValue());
-                for ( HeaderElement e : h.getElements() ) {
+                for ( HeaderElement e : MessageSupport.parse(h) ) {
                     log.debug(prompt + " -   ELEM: " + e.getName() + ": " + e.getValue());
                     for ( NameValuePair p : e.getParameters() ) {
                         log.debug(prompt + " -     P: " + p.getName() + ": " + p.getValue());

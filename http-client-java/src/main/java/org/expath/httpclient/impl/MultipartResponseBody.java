@@ -19,7 +19,7 @@ import java.util.List;
 import org.expath.httpclient.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.http.Header;
+import org.apache.hc.core5.http.Header;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.stream.EntityState;
 import org.apache.james.mime4j.stream.Field;
