@@ -16,6 +16,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.expath.httpclient.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.http.Header;
@@ -23,10 +24,6 @@ import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.stream.EntityState;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.stream.MimeTokenStream;
-import org.expath.httpclient.ContentType;
-import org.expath.httpclient.HeaderSet;
-import org.expath.httpclient.HttpClientException;
-import org.expath.httpclient.HttpResponseBody;
 import org.expath.httpclient.model.Result;
 import org.expath.httpclient.model.TreeBuilder;
 import org.expath.tools.ToolsException;
@@ -41,7 +38,7 @@ public class MultipartResponseBody implements HttpResponseBody {
     public MultipartResponseBody(final Result result, final InputStream in, final ContentType type)
             throws HttpClientException {
         if (type == null || type.getType() == null) {
-            throw new HttpClientException("No content type");
+            throw new HttpClientException(HttpClientError.HC002, "No content type");
         }
 
         myContentType = type;
@@ -49,12 +46,12 @@ public class MultipartResponseBody implements HttpResponseBody {
 
         myBoundary = type.getBoundary();
         if (myBoundary == null) {
-            throw new HttpClientException("No boundary");
+            throw new HttpClientException(HttpClientError.HC002, "No boundary");
         }
         try {
             analyzeParts(result, in);
         } catch (IOException ex) {
-            throw new HttpClientException("error reading the response stream", ex);
+            throw new HttpClientException(HttpClientError.HC002, "error reading the response stream", ex);
         }
     }
 
@@ -70,7 +67,7 @@ public class MultipartResponseBody implements HttpResponseBody {
             }
             b.endElem();
         } catch (final ToolsException ex) {
-            throw new HttpClientException("Error building the body", ex);
+            throw new HttpClientException(HttpClientError.HC002, "Error building the body", ex);
         }
     }
 
@@ -95,7 +92,7 @@ public class MultipartResponseBody implements HttpResponseBody {
                 handleParserState(result, parser, headers);
             }
         } catch (final MimeException ex) {
-            throw new HttpClientException("The response content is ill-formed.", ex);
+            throw new HttpClientException(HttpClientError.HC002, "The response content is ill-formed.", ex);
         }
     }
 
@@ -144,7 +141,7 @@ public class MultipartResponseBody implements HttpResponseBody {
             // ignore some of them.
             default:
                 final String s = MimeTokenStream.stateToString(state);
-                throw new HttpClientException("Unknown parsing state: " + s);
+                throw new HttpClientException(HttpClientError.HC002, "Unknown parsing state: " + s);
         }
     }
 
@@ -167,7 +164,7 @@ public class MultipartResponseBody implements HttpResponseBody {
             throws HttpClientException {
         final Header h = headers.getFirstHeader("Content-Type");
         if (h == null) {
-            throw new HttpClientException("impossible to find the content type");
+            throw new HttpClientException(HttpClientError.HC002, "impossible to find the content type");
         }
         final ContentType type = ContentType.parse(h, null, null);
         try {
@@ -189,10 +186,10 @@ public class MultipartResponseBody implements HttpResponseBody {
                     return new BinaryResponseBody(result, in, type, headers);
                 }
                 default:
-                    throw new HttpClientException("INTERNAL ERROR: cannot happen");
+                    throw new HttpClientException(HttpClientError.HC002, "INTERNAL ERROR: cannot happen");
             }
         } catch (final UnsupportedEncodingException ex) {
-            throw new HttpClientException("Unable to parse response part", ex);
+            throw new HttpClientException(HttpClientError.HC002, "Unable to parse response part", ex);
         }
     }
 

@@ -14,10 +14,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.Header;
-import org.expath.httpclient.HeaderSet;
-import org.expath.httpclient.HttpClientException;
-import org.expath.httpclient.HttpConstants;
-import org.expath.httpclient.HttpRequestBody;
+import org.expath.httpclient.*;
 import org.expath.tools.ToolsException;
 import org.expath.tools.model.Element;
 import org.expath.tools.model.Sequence;
@@ -37,7 +34,7 @@ public class MultipartRequestBody
         // set up boundary
         myBoundary = elem.getAttribute("boundary");
         if ( myBoundary == null ) {
-            throw new HttpClientException("@boundary is not on the multipart element");
+            throw new HttpClientException(HttpClientError.HC005, "@boundary is not on the multipart element");
         }
         myBoundaryBytes = myBoundary.getBytes();
         // check for not allowed attributes
@@ -47,13 +44,13 @@ public class MultipartRequestBody
                     HttpConstants.BOTH_NS_URIS);
         }
         catch ( ToolsException ex ) {
-            throw new HttpClientException("Invalid attributes", ex);
+            throw new HttpClientException(HttpClientError.HC005, "Invalid attributes", ex);
         }
         // handle http:header & http:body childs
         myBodies = new ArrayList<Body>();
         accumulateBodies(elem, bodies, ns);
         if ( myBodies.isEmpty() ) {
-            throw new HttpClientException("http:multipart does not contain any http:body");
+            throw new HttpClientException(HttpClientError.HC005, "http:multipart does not contain any http:body");
         }
     }
 
@@ -104,7 +101,7 @@ public class MultipartRequestBody
             out.write(NEWLINE);
         }
         catch ( IOException ex ) {
-            throw new HttpClientException("IO error serializing multipart content", ex);
+            throw new HttpClientException(HttpClientError.HC001, "IO error serializing multipart content", ex);
         }
     }
 
@@ -120,7 +117,7 @@ public class MultipartRequestBody
         // check if there is any child element in no namespace
         if ( elem.hasNoNsChild() ) {
             String msg = "A child element of http:multipart is in no namespace.";
-            throw new HttpClientException(msg);
+            throw new HttpClientException(HttpClientError.HC005, msg);
         }
         // iterate over child elements in http: namespace (ignore other qualified elements)
         HeaderSet headers = new HeaderSet();
@@ -132,7 +129,7 @@ public class MultipartRequestBody
                             HttpConstants.BOTH_NS_URIS);
                 }
                 catch ( ToolsException ex ) {
-                    throw new HttpClientException("Invalid attributes", ex);
+                    throw new HttpClientException(HttpClientError.HC005, "Invalid attributes", ex);
                 }
                 String name  = b.getAttribute("name");
                 String value = b.getAttribute("value");
@@ -149,7 +146,7 @@ public class MultipartRequestBody
             }
             else {
                 String name = b.getDisplayName();
-                throw new HttpClientException("Unknown http:multipart child: " + name);
+                throw new HttpClientException(HttpClientError.HC005, "Unknown http:multipart child: " + name);
             }
         }
     }

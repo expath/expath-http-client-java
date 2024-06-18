@@ -1,45 +1,22 @@
 /****************************************************************************/
-/*  File:       HttpClientException.java                                    */
-/*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2011-03-01                                                  */
+/*  File:       org.expath.ExpathConstants.java                             */
+/*  Author:     A. Retter - adamretter.org.uk                               */
+/*  Date:       2024-06-18                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2011 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2024 Adam Retter (see end of file.)                   */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.httpclient;
-
+package org.expath;
 
 /**
- * Generic exception for the EXPath HTTP Client implementation in Java.
+ * Centralize some constants.
  *
- * @author Florent Georges
+ * @author Adam Retter
  */
-public class HttpClientException
-        extends Exception
-{
-    private final HttpClientError httpClientError;
-
-    public HttpClientException(final HttpClientError httpClientError, final String message)
-    {
-        super(message);
-        this.httpClientError = httpClientError;
-    }
-
-    public HttpClientException(final HttpClientError httpClientError, final String message, final Throwable cause)
-    {
-        super(message, cause);
-        this.httpClientError = httpClientError;
-    }
-
-    /**
-     * Return the HTTP Client error.
-     *
-     * @return the HTTP Client error.
-     */
-    public HttpClientError getHttpClientError() {
-        return httpClientError;
-    }
+public class ExpathConstants {
+  public final static String ERR_NS_PREFIX = "experr";
+  public final static String ERR_NS_URI = "http://expath.org/ns/error";
 }
 
 
@@ -58,7 +35,7 @@ public class HttpClientException
 /*                                                                          */
 /*  The Original Code is: all this file.                                    */
 /*                                                                          */
-/*  The Initial Developer of the Original Code is Florent Georges.          */
+/*  The Initial Developer of the Original Code is Adam Retter.              */
 /*                                                                          */
 /*  Contributor(s): none.                                                   */
 /* ------------------------------------------------------------------------ */

@@ -16,12 +16,7 @@ import java.util.Set;
 import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.message.BasicHeader;
-import org.expath.httpclient.ContentType;
-import org.expath.httpclient.HeaderSet;
-import org.expath.httpclient.HttpClientException;
-import org.expath.httpclient.HttpConnection;
-import org.expath.httpclient.HttpRequestBody;
-import org.expath.httpclient.HttpResponseBody;
+import org.expath.httpclient.*;
 import org.expath.httpclient.model.Result;
 import org.expath.tools.model.Element;
 import org.expath.tools.model.Sequence;
@@ -58,7 +53,7 @@ public class BodyFactory {
             case BASE64:
                 return new SinglePartRequestBody(elem, bodies, method);
             default:
-                throw new HttpClientException("could not happen");
+                throw new HttpClientException(HttpClientError.HC001, "could not happen");
         }
     }
 
@@ -101,7 +96,7 @@ public class BodyFactory {
             case BINARY:
                 return new BinaryResponseBody(result, in, ctype, headers);
             default:
-                throw new HttpClientException("INTERNAL ERROR: cannot happen");
+                throw new HttpClientException(HttpClientError.HC001, "INTERNAL ERROR: cannot happen");
         }
     }
 
@@ -168,7 +163,7 @@ public class BodyFactory {
     public static Type parseType(final HeaderSet headers) throws HttpClientException {
         final Header h = headers.getFirstHeader("Content-Type");
         if (h == null) {
-            throw new HttpClientException("impossible to find the content type");
+            throw new HttpClientException(HttpClientError.HC001, "impossible to find the content type");
         }
         final ContentType ct = ContentType.parse(h, null, null);
         return parseType(ct);
@@ -183,11 +178,11 @@ public class BodyFactory {
      */
     public static Type parseType(@Nullable final ContentType type) throws HttpClientException {
         if (type == null) {
-            throw new HttpClientException("impossible to find the content type");
+            throw new HttpClientException(HttpClientError.HC001, "impossible to find the content type");
         }
         final String t = type.getType();
         if (t == null) {
-            throw new HttpClientException("impossible to find the content type");
+            throw new HttpClientException(HttpClientError.HC001, "impossible to find the content type");
         }
         return parseType(t);
     }
@@ -200,26 +195,26 @@ public class BodyFactory {
         if ("multipart".equals(local)) {
             return Type.MULTIPART;
         } else if (!"body".equals(local)) {
-            throw new HttpClientException("INTERNAL ERROR: cannot happen, checked before");
+            throw new HttpClientException(HttpClientError.HC001, "INTERNAL ERROR: cannot happen, checked before");
         } else {
             if (elem.getAttribute("src") != null) {
                 return Type.SRC;
             }
             final String mediaType = elem.getAttribute("media-type");
             if (mediaType == null) {
-                throw new HttpClientException("@media-type is not set on http:body");
+                throw new HttpClientException(HttpClientError.HC001, "@media-type is not set on http:body");
             }
             final Header mediaTypeHeader = new BasicHeader("Media-Type", mediaType);
             final HeaderElement[] mediaTypeHeaderElems = mediaTypeHeader.getElements();
             if (mediaTypeHeaderElems == null || mediaTypeHeaderElems.length == 0) {
-                throw new HttpClientException("@media-type is not set on http:body");
+                throw new HttpClientException(HttpClientError.HC001, "@media-type is not set on http:body");
             } else if (mediaTypeHeaderElems.length > 1) {
-                throw new HttpClientException("Multiple @media-type internet media types present");
+                throw new HttpClientException(HttpClientError.HC001, "Multiple @media-type internet media types present");
             } else {
                 final Type type = parseType(mediaTypeHeaderElems[0].getName());
                 if (type == Type.MULTIPART) {
                     final String msg = "multipart type not allowed for http:body: " + mediaType;
-                    throw new HttpClientException(msg);
+                    throw new HttpClientException(HttpClientError.HC001, msg);
                 }
                 return type;
             }
@@ -253,7 +248,7 @@ public class BodyFactory {
         } else if ("hex".equals(m)) {
             return Type.HEX;
         } else {
-            throw new HttpClientException("Incorrect value for @method: " + m);
+            throw new HttpClientException(HttpClientError.HC001, "Incorrect value for @method: " + m);
         }
     }
 }

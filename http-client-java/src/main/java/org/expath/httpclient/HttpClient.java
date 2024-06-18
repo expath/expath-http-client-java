@@ -103,7 +103,7 @@ public class HttpClient
             return sendOnce(result, uri, req, parser);
         }
         catch ( URISyntaxException ex ) {
-            throw new HttpClientException("Href is not valid: " + req.getHref(), ex);
+            throw new HttpClientException(HttpClientError.HC002, "Href is not valid: " + req.getHref(), ex);
         }
     }
 

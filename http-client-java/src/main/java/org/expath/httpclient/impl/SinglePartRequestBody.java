@@ -13,10 +13,7 @@ import java.io.OutputStream;
 import java.util.Properties;
 import javax.xml.namespace.QName;
 import net.iharder.Base64;
-import org.expath.httpclient.HeaderSet;
-import org.expath.httpclient.HttpClientException;
-import org.expath.httpclient.HttpConstants;
-import org.expath.httpclient.HttpRequestBody;
+import org.expath.httpclient.*;
 import org.expath.httpclient.impl.BodyFactory.Type;
 import org.expath.tools.ToolsException;
 import org.expath.tools.model.Element;
@@ -62,7 +59,7 @@ public class SinglePartRequestBody
                 mySerial.setMethod(new QName("expath:hex"));
                 break;
             default:
-                throw new HttpClientException("Unsupported method! (yet?): " + myMethod);
+                throw new HttpClientException(HttpClientError.HC005, "Unsupported method! (yet?): " + myMethod);
         }
         String[] attr_names = {
             "src",
@@ -105,7 +102,7 @@ public class SinglePartRequestBody
                 String name = NOT_SUPPORTED_ATTRS[i];
                 String val = elem.getAttribute(name);
                 if ( val != null ) {
-                    throw new HttpClientException("Attribute not supported yet: http:body/@" + name);
+                    throw new HttpClientException(HttpClientError.HC005, "Attribute not supported yet: http:body/@" + name);
                 }
             }
         }
@@ -114,7 +111,7 @@ public class SinglePartRequestBody
             elem.noOtherNCNameAttribute(attr_names, HttpConstants.BOTH_NS_URIS);
         }
         catch ( ToolsException ex ) {
-            throw new HttpClientException("Invalid attributes", ex);
+            throw new HttpClientException(HttpClientError.HC005, "Invalid attributes", ex);
         }
 
         try {
@@ -126,13 +123,13 @@ public class SinglePartRequestBody
             if ( myChilds.isEmpty() ) {
                 Sequence body = bodies.next();
                 if ( body == null ) {
-                    throw new HttpClientException("There is not enough items within $bodies");
+                    throw new HttpClientException(HttpClientError.HC005, "There is not enough items within $bodies");
                 }
                 myChilds = body;
             }
         }
         catch ( ToolsException ex ) {
-            throw new HttpClientException("Technical error walking through the http:body content", ex);
+            throw new HttpClientException(HttpClientError.HC005, "Technical error walking through the http:body content", ex);
         }
     }
 
@@ -151,7 +148,7 @@ public class SinglePartRequestBody
         }
         else {
             String msg = "Incorrect value for " + attr_name + ": " + val;
-            throw new HttpClientException(msg);
+            throw new HttpClientException(HttpClientError.HC005, msg);
         }
     }
 
@@ -175,7 +172,7 @@ public class SinglePartRequestBody
                 type += "; charset=" + mySerial.getEncoding();
             }
             else if ( mySerial.getEncoding() != null ) {
-                throw new HttpClientException("Encoding is not allowed with method '" + myMethod + "'");
+                throw new HttpClientException(HttpClientError.HC005, "Encoding is not allowed with method '" + myMethod + "'");
             }
             headers.add("Content-Type", type);
         }
@@ -188,7 +185,7 @@ public class SinglePartRequestBody
         if ( myMethod == Type.HEX ) {
             // TODO: Add support for HEX (== "base16")
             // out = new Base16.OutputStream(out, Base16.DECODE);
-            throw new HttpClientException("Method 'hex' not supported yet");
+            throw new HttpClientException(HttpClientError.HC005, "Method 'hex' not supported yet");
         }
         else if ( myMethod == Type.BINARY || myMethod == Type.BASE64 ) {
             out = new Base64.OutputStream(out, Base64.DECODE);
@@ -197,7 +194,7 @@ public class SinglePartRequestBody
             myChilds.serialize(out, mySerial);
         }
         catch ( ToolsException ex ) {
-            throw new HttpClientException("Error serializing the result", ex);
+            throw new HttpClientException(HttpClientError.HC005, "Error serializing the result", ex);
         }
     }
 

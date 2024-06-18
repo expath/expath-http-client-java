@@ -9,12 +9,7 @@
 
 package org.expath.httpclient.impl;
 
-import org.expath.httpclient.HeaderSet;
-import org.expath.httpclient.HttpClientException;
-import org.expath.httpclient.HttpConstants;
-import org.expath.httpclient.HttpCredentials;
-import org.expath.httpclient.HttpRequest;
-import org.expath.httpclient.HttpRequestBody;
+import org.expath.httpclient.*;
 import org.expath.tools.ToolsException;
 import org.expath.tools.model.Attribute;
 import org.expath.tools.model.Element;
@@ -46,7 +41,7 @@ public class RequestParser
         }
         if ( ! "request".equals(name) || ! ns_ok ) {
             String clark = "{" + ns + "}" + name;
-            throw new HttpClientException("$request is not an element(http:request), but is " + clark);
+            throw new HttpClientException(HttpClientError.HC005, "$request is not an element(http:request), but is " + clark);
         }
         myRequest = request;
         myNs = ns;
@@ -134,20 +129,20 @@ public class RequestParser
                 req.setChunked(toBoolean(a));
             }
             else {
-                throw new HttpClientException("Unknown attribute http:request/@" + local);
+                throw new HttpClientException(HttpClientError.HC005, "Unknown attribute http:request/@" + local);
             }
         }
         if ( req.getMethod() == null ) {
-            throw new HttpClientException("required @method has not been set on http:request");
+            throw new HttpClientException(HttpClientError.HC005, "required @method has not been set on http:request");
         }
         if ( req.getHref() == null ) {
-            throw new HttpClientException("required @href has not been set on http:request");
+            throw new HttpClientException(HttpClientError.HC005, "required @href has not been set on http:request");
         }
         if ( username != null || password != null || auth_method != null ) {
             setAuthentication(username, password, auth_method);
         }
         if(req.getHttpVersion() != null && req.getHttpVersion().equals(HttpConstants.HTTP_1_0) && req.isChunked()) {
-            throw new HttpClientException("Chunked transfer encoding can only be used with HTTP 1.1");
+            throw new HttpClientException(HttpClientError.HC005, "Chunked transfer encoding can only be used with HTTP 1.1");
         }
 
         // walk the elements
@@ -159,11 +154,11 @@ public class RequestParser
             String ns = child.getNamespaceUri();
             if ( ns == null || ns.isEmpty() ) {
                 // elements in no namespace are an error
-                throw new HttpClientException("Element in no namespace: " + local);
+                throw new HttpClientException(HttpClientError.HC005, "Element in no namespace: " + local);
             }
             else if ( myOtherNs.equals(ns) ) {
                 String clark = "{" + ns + "}" + local;
-                throw new HttpClientException("http:request mixes elements in the new and legacy HTTP namespace: " + clark);
+                throw new HttpClientException(HttpClientError.HC005, "http:request mixes elements in the new and legacy HTTP namespace: " + clark);
             }
             else if ( ! myNs.equals(ns) ) {
                 // ignore elements in other namespaces
@@ -176,7 +171,7 @@ public class RequestParser
                 req.setBody(b);
             }
             else {
-                throw new HttpClientException("Unknown element: " + local);
+                throw new HttpClientException(HttpClientError.HC005, "Unknown element: " + local);
             }
         }
 
@@ -187,7 +182,7 @@ public class RequestParser
             throws HttpClientException
     {
         if ( user == null || pwd == null || method == null ) {
-            throw new HttpClientException("@username, @password and @auth-method must be all set");
+            throw new HttpClientException(HttpClientError.HC005, "@username, @password and @auth-method must be all set");
         }
         if ( "basic".equals(method) ) {
             myCredentials = new HttpCredentials(user, pwd, method);
@@ -198,7 +193,7 @@ public class RequestParser
             myCredentials = new HttpCredentials(user, pwd, method);
         }
         else {
-            throw new HttpClientException("Unknown authentication method: " + method);
+            throw new HttpClientException(HttpClientError.HC005, "Unknown authentication method: " + method);
         }
     }
 
@@ -219,20 +214,20 @@ public class RequestParser
                 value = a.getValue();
             }
             else {
-                throw new HttpClientException("Unknown attribute http:header/@" + local);
+                throw new HttpClientException(HttpClientError.HC005, "Unknown attribute http:header/@" + local);
             }
         }
         // both are required
         if ( name == null || value == null ) {
-            throw new HttpClientException("@name and @value are required on http:header");
+            throw new HttpClientException(HttpClientError.HC005, "@name and @value are required on http:header");
         }
 
         if(name.equalsIgnoreCase("Content-Length")) {
-            throw new HttpClientException("Content-Length should not be explicitly provided, either it will automatically be added or Transfer-Encoding will be used.");
+            throw new HttpClientException(HttpClientError.HC005, "Content-Length should not be explicitly provided, either it will automatically be added or Transfer-Encoding will be used.");
         }
 
         if(name.equalsIgnoreCase("Transfer-Encoding")) {
-            throw new HttpClientException("Transfer-Encoding should not be explicitly provided, it will automatically be added if required.");
+            throw new HttpClientException(HttpClientError.HC005, "Transfer-Encoding should not be explicitly provided, it will automatically be added if required.");
         }
 
         // actually add the header
@@ -253,7 +248,7 @@ public class RequestParser
             return a.getBoolean();
         }
         catch ( ToolsException ex ) {
-            throw new HttpClientException("Error parsing the attribute as a boolean", ex);
+            throw new HttpClientException(HttpClientError.HC005, "Error parsing the attribute as a boolean", ex);
         }
     }
 
@@ -271,7 +266,7 @@ public class RequestParser
             return a.getInteger();
         }
         catch ( ToolsException ex ) {
-            throw new HttpClientException("Error parsing the attribute as an integer", ex);
+            throw new HttpClientException(HttpClientError.HC005, "Error parsing the attribute as an integer", ex);
         }
     }
 

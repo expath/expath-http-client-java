@@ -1,45 +1,47 @@
 /****************************************************************************/
-/*  File:       HttpClientException.java                                    */
-/*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2011-03-01                                                  */
+/*  File:       org.expath.httpclient.HttpClientError.java                  */
+/*  Author:     A. Retter - adamretter.org.uk                               */
+/*  Date:       2024-06-18                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2011 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2024 Adam Retter (see end of file.)                   */
 /* ------------------------------------------------------------------------ */
 
 
 package org.expath.httpclient;
 
+import org.expath.ExpathConstants;
+import org.expath.ExpathError;
+
+import javax.xml.namespace.QName;
 
 /**
- * Generic exception for the EXPath HTTP Client implementation in Java.
- *
- * @author Florent Georges
+ * An error as defined by the EXPath HTTP Client specification.
  */
-public class HttpClientException
-        extends Exception
-{
-    private final HttpClientError httpClientError;
+public enum HttpClientError implements ExpathError {
+  HC001("HC01", "An HTTP error occurred"),
+  HC002("HC02", "Error parsing the entity content as XML or HTML."),
+  HC003("HC03", "With a multipart response, the override-media-type must be either a multipart media type or application/octet-stream."),
+  HC004("HC04", "The src attribute on the body element is mutually exclusive with all other attribute (except the media-type)."),
+  HC005("HC05", "The request element is not valid."),
+  HC006("HC06", "A timeout occurred waiting for the response.");
 
-    public HttpClientException(final HttpClientError httpClientError, final String message)
-    {
-        super(message);
-        this.httpClientError = httpClientError;
-    }
+  private final QName name;
+  private final String description;
 
-    public HttpClientException(final HttpClientError httpClientError, final String message, final Throwable cause)
-    {
-        super(message, cause);
-        this.httpClientError = httpClientError;
-    }
+  HttpClientError(final String code, final String description) {
+    this.name = new QName(ExpathConstants.ERR_NS_URI, code, ExpathConstants.ERR_NS_PREFIX);
+    this.description = description;
+  }
 
-    /**
-     * Return the HTTP Client error.
-     *
-     * @return the HTTP Client error.
-     */
-    public HttpClientError getHttpClientError() {
-        return httpClientError;
-    }
+  @Override
+  public QName getName() {
+    return name;
+  }
+
+  @Override
+  public String getDescription() {
+    return description;
+  }
 }
 
 
@@ -58,7 +60,7 @@ public class HttpClientException
 /*                                                                          */
 /*  The Original Code is: all this file.                                    */
 /*                                                                          */
-/*  The Initial Developer of the Original Code is Florent Georges.          */
+/*  The Initial Developer of the Original Code is Adam Retter.              */
 /*                                                                          */
 /*  Contributor(s): none.                                                   */
 /* ------------------------------------------------------------------------ */

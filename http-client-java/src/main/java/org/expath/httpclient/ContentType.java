@@ -48,11 +48,11 @@ public class ContentType {
             } else {
                 // get the charset from the header or the default
                 if (header == null || !"Content-Type".equalsIgnoreCase(header.getName())) {
-                    throw new HttpClientException("Header is not content type");
+                    throw new HttpClientException(HttpClientError.HC001, "Header is not content type");
                 }
                 final HeaderElement[] headerElements = header.getElements();
                 if (headerElements.length > 1) {
-                    throw new HttpClientException("Multiple Content-Type headers");
+                    throw new HttpClientException(HttpClientError.HC001, "Multiple Content-Type headers");
                 }
 
                 final NameValuePair headerCharset = headerElements[0].getParameterByName("charset");
@@ -69,11 +69,11 @@ public class ContentType {
             } else {
                 // get the boundary from the header or null
                 if (header == null || !"Content-Type".equalsIgnoreCase(header.getName())) {
-                    throw new HttpClientException("Header is not content type");
+                    throw new HttpClientException(HttpClientError.HC001, "Header is not content type");
                 }
                 final HeaderElement[] headerElements = header.getElements();
                 if (headerElements.length > 1) {
-                    throw new HttpClientException("Multiple Content-Type headers");
+                    throw new HttpClientException(HttpClientError.HC001, "Multiple Content-Type headers");
                 }
 
                 final NameValuePair headerBoundary = headerElements[0].getParameterByName("boundary");
@@ -87,12 +87,12 @@ public class ContentType {
             }
 
             if (!"Content-Type".equalsIgnoreCase(header.getName())) {
-                throw new HttpClientException("Header is not Content-Type");
+                throw new HttpClientException(HttpClientError.HC001, "Header is not Content-Type");
             }
 
             final HeaderElement[] headerElements = header.getElements();
             if (headerElements.length > 1) {
-                throw new HttpClientException("Multiple Content-Type headers");
+                throw new HttpClientException(HttpClientError.HC001, "Multiple Content-Type headers");
             }
 
             type = extractMediaTypeFromContentType(header.getValue());

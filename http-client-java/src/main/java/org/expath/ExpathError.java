@@ -1,45 +1,34 @@
 /****************************************************************************/
-/*  File:       HttpClientException.java                                    */
-/*  Author:     F. Georges - H2O Consulting                                 */
-/*  Date:       2011-03-01                                                  */
+/*  File:       org.expath.ExpathError.java                                 */
+/*  Author:     A. Retter - adamretter.org.uk                               */
+/*  Date:       2024-06-18                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2011 Florent Georges (see end of file.)               */
+/*      Copyright (c) 2024 Adam Retter (see end of file.)                   */
 /* ------------------------------------------------------------------------ */
 
 
-package org.expath.httpclient;
+package org.expath;
 
+import javax.xml.namespace.QName;
 
 /**
- * Generic exception for the EXPath HTTP Client implementation in Java.
- *
- * @author Florent Georges
+ * An EXPath Error.
  */
-public class HttpClientException
-        extends Exception
-{
-    private final HttpClientError httpClientError;
+public interface ExpathError {
 
-    public HttpClientException(final HttpClientError httpClientError, final String message)
-    {
-        super(message);
-        this.httpClientError = httpClientError;
-    }
+  /**
+   * Get the qualified name of the EXPath error.
+   *
+   * @return the name.
+   */
+  QName getName();
 
-    public HttpClientException(final HttpClientError httpClientError, final String message, final Throwable cause)
-    {
-        super(message, cause);
-        this.httpClientError = httpClientError;
-    }
-
-    /**
-     * Return the HTTP Client error.
-     *
-     * @return the HTTP Client error.
-     */
-    public HttpClientError getHttpClientError() {
-        return httpClientError;
-    }
+  /**
+   * Get the description of the EXPath error.
+   *
+   * @return the description.
+   */
+  String getDescription();
 }
 
 
@@ -58,7 +47,7 @@ public class HttpClientException
 /*                                                                          */
 /*  The Original Code is: all this file.                                    */
 /*                                                                          */
-/*  The Initial Developer of the Original Code is Florent Georges.          */
+/*  The Initial Developer of the Original Code is Adam Retter.              */
 /*                                                                          */
 /*  Contributor(s): none.                                                   */
 /* ------------------------------------------------------------------------ */

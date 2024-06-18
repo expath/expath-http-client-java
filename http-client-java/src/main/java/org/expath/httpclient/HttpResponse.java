@@ -63,7 +63,7 @@ public class HttpResponse
             b.endElem();
         }
         catch ( ToolsException ex ) {
-            throw new HttpClientException("Error building the response", ex);
+            throw new HttpClientException(HttpClientError.HC002, "Error building the response", ex);
         }
     }
 

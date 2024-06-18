@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import org.expath.httpclient.HeaderSet;
+import org.expath.httpclient.HttpClientError;
 import org.expath.httpclient.HttpClientException;
 import org.expath.httpclient.HttpRequestBody;
 import org.expath.tools.model.Element;
@@ -73,10 +74,10 @@ public class HrefRequestBody
                     out.write(buf, 0, l);
                 }
             } catch (IOException ex) {
-                throw new HttpClientException("Error sending the file content", ex);
+                throw new HttpClientException(HttpClientError.HC001, "Error sending the file content", ex);
             }
         } catch ( URISyntaxException ex ) {
-            throw new HttpClientException("Bad URI: " + myHref, ex);
+            throw new HttpClientException(HttpClientError.HC005, "Bad URI: " + myHref, ex);
         }
     }
 

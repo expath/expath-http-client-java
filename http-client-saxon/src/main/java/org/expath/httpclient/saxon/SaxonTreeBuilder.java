@@ -12,6 +12,7 @@ package org.expath.httpclient.saxon;
 import net.sf.saxon.expr.XPathContext;
 import org.apache.http.Header;
 import org.expath.httpclient.HeaderSet;
+import org.expath.httpclient.HttpClientError;
 import org.expath.httpclient.HttpClientException;
 import org.expath.httpclient.model.TreeBuilder;
 import org.expath.tools.ToolsException;
@@ -47,7 +48,7 @@ public class SaxonTreeBuilder
                 endElem();
             }
             catch ( ToolsException ex ) {
-                throw new HttpClientException("Error building the header " + name, ex);
+                throw new HttpClientException(HttpClientError.HC001, "Error building the header " + name, ex);
             }
         }
     }

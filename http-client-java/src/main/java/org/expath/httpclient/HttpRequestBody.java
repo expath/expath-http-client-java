@@ -40,7 +40,7 @@ public abstract class HttpRequestBody
         myElem = elem;
         myContentType = myElem.getAttribute("media-type");
         if ( myContentType == null ) {
-            throw new HttpClientException("@media-type is not on the body or multipart element");
+            throw new HttpClientException(HttpClientError.HC005, "@media-type is not on the body or multipart element");
         }
     }
 

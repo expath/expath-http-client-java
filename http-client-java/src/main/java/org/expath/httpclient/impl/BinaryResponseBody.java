@@ -12,10 +12,8 @@ package org.expath.httpclient.impl;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import org.expath.httpclient.ContentType;
-import org.expath.httpclient.HeaderSet;
-import org.expath.httpclient.HttpClientException;
-import org.expath.httpclient.HttpResponseBody;
+
+import org.expath.httpclient.*;
 import org.expath.httpclient.model.Result;
 import org.expath.httpclient.model.TreeBuilder;
 import org.expath.tools.ToolsException;
@@ -59,7 +57,7 @@ public class BinaryResponseBody
             b.endElem();
         }
         catch ( ToolsException ex ) {
-            throw new HttpClientException("Error building the body", ex);
+            throw new HttpClientException(HttpClientError.HC002, "Error building the body", ex);
         }
     }
 

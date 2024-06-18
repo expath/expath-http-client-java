@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 
 import net.jcip.annotations.NotThreadSafe;
+import org.expath.httpclient.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.http.Header;
@@ -50,12 +51,6 @@ import org.apache.http.impl.conn.*;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.ssl.SSLContexts;
-import org.expath.httpclient.HeaderSet;
-import org.expath.httpclient.HttpClientException;
-import org.expath.httpclient.HttpConnection;
-import org.expath.httpclient.HttpConstants;
-import org.expath.httpclient.HttpCredentials;
-import org.expath.httpclient.HttpRequestBody;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
@@ -82,7 +77,7 @@ public class ApacheHttpConnection
             throws HttpClientException
     {
         if ( myRequest == null ) {
-            throw new HttpClientException("setRequestMethod has not been called before");
+            throw new HttpClientException(HttpClientError.HC001, "setRequestMethod has not been called before");
         }
 
         myRequest.setProtocolVersion(myVersion);
@@ -125,7 +120,7 @@ public class ApacheHttpConnection
         }
         catch ( IOException ex ) {
             final String message = getMessage(ex);
-            throw new HttpClientException("Error executing the HTTP method: " + message != null ? message : "<unknown>", ex);
+            throw new HttpClientException(HttpClientError.HC001, "Error executing the HTTP method: " + message != null ? message : "<unknown>", ex);
         } finally {
             state = State.POST_CONNECT;
         }
@@ -165,7 +160,7 @@ public class ApacheHttpConnection
             myClient = null;
         } catch (final IOException ex) {
             final String message = getMessage(ex);
-            throw new HttpClientException(message, ex);
+            throw new HttpClientException(HttpClientError.HC001, message, ex);
         }
     }
 
@@ -176,7 +171,7 @@ public class ApacheHttpConnection
         if ( state != State.INITIAL ) {
             String msg = "Internal error, HTTP version cannot been "
                     + "set after connect() has been called.";
-            throw new HttpClientException(msg);
+            throw new HttpClientException(HttpClientError.HC005, msg);
         }
         if ( HttpConstants.HTTP_1_0.equals(ver) ) {
             myVersion = HttpVersion.HTTP_1_0;
@@ -185,7 +180,7 @@ public class ApacheHttpConnection
             myVersion = HttpVersion.HTTP_1_1;
         }
         else {
-            throw new HttpClientException("Internal error, unknown HTTP version: '" + ver + "'");
+            throw new HttpClientException(HttpClientError.HC005, "Internal error, unknown HTTP version: '" + ver + "'");
         }
     }
 
@@ -193,7 +188,7 @@ public class ApacheHttpConnection
             throws HttpClientException
     {
         if ( myRequest == null ) {
-            throw new HttpClientException("setRequestMethod has not been called before");
+            throw new HttpClientException(HttpClientError.HC001, "setRequestMethod has not been called before");
         }
         myRequest.setHeaders(headers.toArray());
     }
@@ -228,7 +223,7 @@ public class ApacheHttpConnection
             myRequest = new HttpTrace(uri);
         }
         else if ( ! checkMethodName(method) ) {
-            throw new HttpClientException("Invalid HTTP method name [" + method + "]");
+            throw new HttpClientException(HttpClientError.HC005, "Invalid HTTP method name [" + method + "]");
         }
         else if ( with_content ) {
             myRequest = new AnyEntityMethod(m, uri);
@@ -346,7 +341,7 @@ public class ApacheHttpConnection
             return entity == null ? null : entity.getContent();
         }
         catch ( IOException ex ) {
-            throw new HttpClientException("Error getting the HTTP response stream", ex);
+            throw new HttpClientException(HttpClientError.HC001, "Error getting the HTTP response stream", ex);
         }
     }
 
@@ -406,7 +401,7 @@ public class ApacheHttpConnection
             } else if ("https".equals(scheme)) {
                 port = 443;
             } else {
-                throw new HttpClientException("Unknown scheme: " + uri);
+                throw new HttpClientException(HttpClientError.HC001, "Unknown scheme: " + uri);
             }
         }
         final String host = uri.getHost();
@@ -490,7 +485,7 @@ public class ApacheHttpConnection
                     body.serialize(buffer);
                     template = new ByteArrayEntity(buffer.toByteArray());
                 } catch (final IOException e) {
-                    throw new HttpClientException(e.getMessage(), e);
+                    throw new HttpClientException(HttpClientError.HC001, e.getMessage(), e);
                 }
             }
 
@@ -515,7 +510,7 @@ public class ApacheHttpConnection
                 }
                 entity = new ByteArrayEntity(buffer.toByteArray());
             } catch (final IOException e) {
-                throw new HttpClientException(e.getMessage(), e);
+                throw new HttpClientException(HttpClientError.HC001, e.getMessage(), e);
             }
         }
 
@@ -523,7 +518,7 @@ public class ApacheHttpConnection
         HttpEntityEnclosingRequestBase req = null;
         if ( ! (myRequest instanceof HttpEntityEnclosingRequestBase) ) {
             String msg = "Body not allowed on a " + myRequest.getMethod() + " request";
-            throw new HttpClientException(msg);
+            throw new HttpClientException(HttpClientError.HC001, msg);
         }
         else {
             req = (HttpEntityEnclosingRequestBase) myRequest;
@@ -550,9 +545,8 @@ public class ApacheHttpConnection
     }
 
     /**
-     * Implements SNI (Server Name Identification) for SSL
-     *
-     * @see https://github.com/fgeorges/expath-http-client-java/issues/5
+     * Implements SNI (Server Name Identification) for SSL.
+     * Fixes <a href="https://github.com/fgeorges/expath-http-client-java/issues/5">https://github.com/fgeorges/expath-http-client-java/issues/5</a>.
      */
     private static class SSLSocketFactoryWithSNI extends SSLConnectionSocketFactory {
         public SSLSocketFactoryWithSNI(final SSLContext sslContext) {

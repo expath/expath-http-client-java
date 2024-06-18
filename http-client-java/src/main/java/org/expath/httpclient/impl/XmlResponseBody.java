@@ -19,10 +19,7 @@ import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 
 import org.ccil.cowan.tagsoup.Parser;
-import org.expath.httpclient.ContentType;
-import org.expath.httpclient.HeaderSet;
-import org.expath.httpclient.HttpClientException;
-import org.expath.httpclient.HttpResponseBody;
+import org.expath.httpclient.*;
 import org.expath.httpclient.model.Result;
 import org.expath.httpclient.model.TreeBuilder;
 import org.expath.tools.ToolsException;
@@ -76,7 +73,7 @@ public class XmlResponseBody implements HttpResponseBody {
             }
             result.add(src);
         } catch (SAXException ex) {
-            throw new HttpClientException("error parsing result HTML", ex);
+            throw new HttpClientException(HttpClientError.HC002, "error parsing result HTML", ex);
         }
     }
 
@@ -93,7 +90,7 @@ public class XmlResponseBody implements HttpResponseBody {
             b.startContent();
             b.endElem();
         } catch (ToolsException ex) {
-            throw new HttpClientException("Error building the body", ex);
+            throw new HttpClientException(HttpClientError.HC002, "Error building the body", ex);
         }
     }
 

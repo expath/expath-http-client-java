@@ -47,7 +47,7 @@ public class HeaderSet
             throws HttpClientException
     {
         if ( headers == null ) {
-            throw new HttpClientException("Headers array is null");
+            throw new HttpClientException(HttpClientError.HC005, "Headers array is null");
         }
         myHeaders = new ArrayList<Header>(headers.length);
         myHeaders.addAll(Arrays.asList(headers));
@@ -63,7 +63,7 @@ public class HeaderSet
             throws HttpClientException
     {
         if ( headers == null ) {
-            throw new HttpClientException("Headers list is null");
+            throw new HttpClientException(HttpClientError.HC005, "Headers list is null");
         }
         myHeaders = new ArrayList<Header>(headers);
     }

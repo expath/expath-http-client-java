@@ -23,6 +23,7 @@ import net.sf.saxon.tree.iter.ArrayIterator;
 import net.sf.saxon.value.Base64BinaryValue;
 import net.sf.saxon.value.SequenceExtent;
 import net.sf.saxon.value.StringValue;
+import org.expath.httpclient.HttpClientError;
 import org.expath.httpclient.HttpClientException;
 import org.expath.httpclient.HttpConstants;
 import org.expath.httpclient.HttpResponse;
@@ -69,7 +70,7 @@ public class SaxonResult
             myItems.add(item);
         }
         catch ( final IOException ex ) {
-            throw new HttpClientException("error reading HTTP response", ex);
+            throw new HttpClientException(HttpClientError.HC002, "error reading HTTP response", ex);
         }
     }
 
@@ -88,7 +89,7 @@ public class SaxonResult
             Item item = new Base64BinaryValue(bytes);
             myItems.add(item);
         } catch(final IOException e) {
-            throw new HttpClientException(e.getMessage(), e);
+            throw new HttpClientException(HttpClientError.HC002, e.getMessage(), e);
         }
     }
 
@@ -104,7 +105,7 @@ public class SaxonResult
             myItems.add(doc);
         }
         catch ( XPathException ex ) {
-            throw new HttpClientException("Error building the XML or HTML document", ex);
+            throw new HttpClientException(HttpClientError.HC002, "Error building the XML or HTML document", ex);
         }
     }
 
@@ -119,7 +120,7 @@ public class SaxonResult
             myItems.add(0, elem);
         }
         catch ( ToolsException ex ) {
-            throw new HttpClientException("Error building the response", ex);
+            throw new HttpClientException(HttpClientError.HC002, "Error building the response", ex);
         }
     }
 
