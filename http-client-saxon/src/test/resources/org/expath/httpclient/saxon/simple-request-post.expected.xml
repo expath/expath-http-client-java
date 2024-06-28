@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<result xmlns:http="http://expath.org/ns/http-client">
+    <http:response message="Accepted" spent-millis="151" status="202">
+        <http:header name="content-type" value="application/xml"/>
+        <http:header name="matched-stub-id" value="453be29a-0054-4c16-8bb6-2f5607c0f369"/>
+        <http:header name="transfer-encoding" value="chunked"/>
+        <http:header name="server" value="Jetty(9.2.28.v20190418)"/>
+        <http:body media-type="application/xml; charset=utf-8"/>
+    </http:response>
+    <response>SUCCESS</response>
+</result>

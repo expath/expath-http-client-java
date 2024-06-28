@@ -1,0 +1,7 @@
+<http:request xmlns:http="http://expath.org/ns/http-client" href="${ENDPOINT_URL}" method="POST" default-charset="utf-8">
+    <http:header name="Accept" value="*/*;charset=utf-8"/>
+    <http:header name="Accept-Encoding" value="utf-8"/>
+    <http:header name="Authorization" value="Bearer ${UUID}"/>
+    <http:header name="Content-Type" value="application/json"/>
+    <http:body media-type="text/plain">{ "key1": "value1", "key2": "value2" }</http:body>
+</http:request>
