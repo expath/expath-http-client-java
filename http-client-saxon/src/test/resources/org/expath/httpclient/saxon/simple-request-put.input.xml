@@ -1,0 +1,5 @@
+<http:request xmlns:http="http://expath.org/ns/http-client" href="${ENDPOINT_URL}" method="PUT">
+    <http:body media-type="application/xml">
+        <data>hello</data>
+    </http:body>
+</http:request>

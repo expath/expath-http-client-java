@@ -99,6 +99,54 @@ public class SendRequestFunctionIT {
     assertSimpleRequest(endpoint, inputXmlFilename, expectedResultFilename);
   }
 
+  @Test
+  public void simpleRequestPut() throws IOException, SaxonApiException, ParserConfigurationException {
+    final String endpoint = "/simpleRequestPut";
+
+    // Stub the HTTP Server endpoint for this test
+    wireMockRule.stubFor(
+        put(endpoint)
+            .withHeader("Content-Type", equalTo("application/xml; charset=UTF-8"))
+            .withRequestBody(equalToXml("<data>hello</data>"))
+            .willReturn(created()
+                .withHeader("Content-Type", "application/xml")
+                .withBody("<response>SUCCESS</response>"))
+    );
+
+    // the EXPath HTTP Client request to test
+    final String inputXmlFilename = "simple-request-put.input.xml";
+
+    // the expected result
+    final String expectedResultFilename = "simple-request-put.expected.xml";
+
+    // perform the request and assert the result
+    assertSimpleRequest(endpoint, inputXmlFilename, expectedResultFilename);
+  }
+
+  @Test
+  public void simpleRequestPost() throws IOException, SaxonApiException, ParserConfigurationException {
+    final String endpoint = "/simpleRequestPost";
+
+    // Stub the HTTP Server endpoint for this test
+    wireMockRule.stubFor(
+        post(endpoint)
+            .withHeader("Content-Type", equalTo("application/json"))
+            .withRequestBody(equalToJson("{ \"key1\": \"value1\", \"key2\": \"value2\" }"))
+            .willReturn(aResponse().withStatus(202)
+                .withHeader("Content-Type", "application/xml")
+                .withBody("<response>SUCCESS</response>"))
+    );
+
+    // the EXPath HTTP Client request to test
+    final String inputXmlFilename = "simple-request-post.input.xml";
+
+    // the expected result
+    final String expectedResultFilename = "simple-request-post.expected.xml";
+
+    // perform the request and assert the result
+    assertSimpleRequest(endpoint, inputXmlFilename, expectedResultFilename);
+  }
+
   private void assertSimpleRequest(final String endpoint, final String inputXmlFilename, final String expectedResultFilename) throws IOException, SaxonApiException, ParserConfigurationException {
     final String request;
     try (final InputStream isRequest = getClass().getResourceAsStream(inputXmlFilename)) {
@@ -112,13 +160,13 @@ public class SendRequestFunctionIT {
 
     assertNotNull(result);
 
-    // START TEMP
+    // NOTE(AR) - START DEBUG RESPONSE
 //    final StringWriter stringWriter = new StringWriter();
 //    Serializer serializer = PROCESSOR.newSerializer(stringWriter);
 //    XdmNode source = PROCESSOR.newDocumentBuilder().wrap(result);
 //    serializer.serializeNode(source);
 //    System.out.println(stringWriter);
-    // END TEMP
+    // NOTE(AR) - END DEBUG RESPONSE
 
     try (final InputStream is = getClass().getResourceAsStream(expectedResultFilename)) {
       final Source expected = Input.fromStream(is).build();
