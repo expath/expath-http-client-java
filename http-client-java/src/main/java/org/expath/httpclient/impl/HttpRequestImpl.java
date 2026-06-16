@@ -9,6 +9,7 @@
 
 package org.expath.httpclient.impl;
 
+import org.expath.httpclient.BomAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hc.core5.http.Header;
@@ -68,7 +69,7 @@ public class HttpRequestImpl
                 LOG.debug("There is no Content-Type, we assume there is no content");
             }
             else {
-                body = BodyFactory.makeResponseBody(result, type, conn);
+                body = BodyFactory.makeResponseBody(result, type, myBomAction, conn);
             }
         }
         long stop = System.currentTimeMillis();
@@ -133,6 +134,11 @@ public class HttpRequestImpl
     @Override
     public void setDefaultCharset(final String charset) {
         myDefaultCharset = charset;
+    }
+
+    @Override
+    public void setBomAction(final BomAction bomAction) {
+        myBomAction = bomAction;
     }
 
     @Override
@@ -210,6 +216,7 @@ public class HttpRequestImpl
     private String myHref;
     private String myHttpVer;
     private String myDefaultCharset;
+    private BomAction myBomAction = BomAction.PRESERVE_IGNORE;
     private String myOverrideType;
     private boolean myStatusOnly;
     private boolean myFollowRedirect = true;
@@ -240,5 +247,5 @@ public class HttpRequestImpl
 /*                                                                          */
 /*  The Initial Developer of the Original Code is Florent Georges.          */
 /*                                                                          */
-/*  Contributor(s): none.                                                   */
+/*  Contributor(s): Evolved Binary Ltd.                                     */
 /* ------------------------------------------------------------------------ */

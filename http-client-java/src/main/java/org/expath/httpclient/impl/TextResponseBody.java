@@ -13,10 +13,14 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import com.evolvedbinary.j8xu.BOM;
+import com.evolvedbinary.j8xu.io.BomFilterInputStream;
 import org.expath.httpclient.*;
 import org.expath.httpclient.model.Result;
 import org.expath.httpclient.model.TreeBuilder;
 import org.expath.tools.ToolsException;
+
+import javax.annotation.Nullable;
 
 /**
  * A text body in the response.
@@ -27,35 +31,46 @@ public class TextResponseBody implements HttpResponseBody {
 
     public static final Charset DEFAULT_HTTP_TEXT_CHARSET = StandardCharsets.ISO_8859_1;
 
-    public TextResponseBody(final Result result, final InputStream in, final ContentType type, final HeaderSet headers)
+    public TextResponseBody(final Result result, InputStream in, final ContentType type, final BomAction bomAction, final HeaderSet headers)
             throws HttpClientException {
         myContentType = type;
         myHeaders = headers;
 
-        final Charset contentCharset;
+        Charset contentCharset;
         if (type.getCharset() != null) {
             contentCharset = Charset.forName(type.getCharset());
         } else {
             contentCharset = DEFAULT_HTTP_TEXT_CHARSET;
+        }
+
+        if (bomAction != BomAction.PRESERVE_IGNORE) {
+            final BomFilterInputStream bomIn = new BomFilterInputStream(in);
+            try {
+                @Nullable final BOM bom = bomIn.parseBom();
+
+                if (bom != null) {
+                    if (bomAction == BomAction.ERROR) {
+                        throw new HttpClientException(HttpClientError.HC002, "bom-action='error' but found BOM: " + bom.name());
+                    }
+
+                    if (bomAction == BomAction.DROP_IGNORE) {
+                        bomIn.skip(bom.getBomBytes().length);
+                    } else if (bomAction == BomAction.DROP_OVERRIDE_CHARSET) {
+                        contentCharset = bom.getCharset();
+                        bomIn.skip(bom.getBomBytes().length);
+                    } else if (bomAction == BomAction.PRESERVE_OVERRIDE_CHARSET) {
+                        contentCharset = bom.getCharset();
+                    }
+                }
+            } catch (final IOException e) {
+                throw new HttpClientException(HttpClientError.HC002, "Unable to parser BOM: " + e.getMessage(), e);
+            }
+
+            in = bomIn;
         }
 
         final Reader reader = new InputStreamReader(in, contentCharset);
         result.add(reader, contentCharset);
-    }
-
-    public TextResponseBody(final Result result, final Reader in, final ContentType type, final HeaderSet headers)
-            throws HttpClientException {
-        myContentType = type;
-        myHeaders = headers;
-
-        final Charset contentCharset;
-        if (type.getCharset() != null) {
-            contentCharset = Charset.forName(type.getCharset());
-        } else {
-            contentCharset = DEFAULT_HTTP_TEXT_CHARSET;
-        }
-
-        result.add(in, contentCharset);
     }
 
     @Override
@@ -96,5 +111,5 @@ public class TextResponseBody implements HttpResponseBody {
 /*                                                                          */
 /*  The Initial Developer of the Original Code is Florent Georges.          */
 /*                                                                          */
-/*  Contributor(s): none.                                                   */
+/*  Contributor(s): Evolved Binary Ltd.                                     */
 /* ------------------------------------------------------------------------ */

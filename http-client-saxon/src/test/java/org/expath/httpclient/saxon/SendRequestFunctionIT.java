@@ -1,9 +1,9 @@
 /****************************************************************************/
 /*  File:       org.expath.httpclient.saxon.SendRequestFunctionIT.java      */
-/*  Author:     A. Retter - adamretter.org.uk                               */
+/*  Author:     Adam Retter - Evolved Binary Ltd                            */
 /*  Date:       2024-06-28                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2024 Adam Retter (see end of file.)                   */
+/*      Copyright (c) 2024 Evolved Binary Ltd (see end of file.)            */
 /* ------------------------------------------------------------------------ */
 
 
@@ -63,7 +63,7 @@ public class SendRequestFunctionIT {
 
   @BeforeClass
   public static void setup() throws IOException, SaxonApiException, ParserConfigurationException {
-    // Register the EXPath HTTP Client Function for with Saxon
+    // Register the EXPath HTTP Client Function with Saxon
     PROCESSOR.registerExtensionFunction(new SendRequestFunction());
 
     // Compile our transformations
@@ -94,6 +94,39 @@ public class SendRequestFunctionIT {
 
     // the expected result
     final String expectedResultFilename = "simple-request-get.expected.xml";
+
+    // perform the request and assert the result
+    assertSimpleRequest(endpoint, inputXmlFilename, expectedResultFilename);
+  }
+
+  @Test
+  public void simpleRequestGetUtf16Le() throws IOException, SaxonApiException, ParserConfigurationException {
+    final String endpoint = "/simpleRequestGetUtf16Le";
+
+    final byte[] responseData;
+    try (final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+         final InputStream is = getClass().getResourceAsStream("utf16le.csv")) {
+      int read = -1;
+      final byte[] buf = new byte[1024];
+      while ((read = is.read(buf)) > -1) {
+        baos.write(buf, 0, read);
+      }
+      responseData = baos.toByteArray();
+    }
+
+    // Stub the HTTP Server endpoint for this test
+    wireMockRule.stubFor(
+            get(endpoint)
+                .willReturn(ok()
+                  .withHeader("Content-Type", "text/csv; charset=UTF-16LE")
+                  .withBody(responseData))
+    );
+
+    // the EXPath HTTP Client request to test
+    final String inputXmlFilename = "simple-request-get-utf16le.input.xml";
+
+    // the expected result
+    final String expectedResultFilename = "simple-request-get-utf16le.expected.xml";
 
     // perform the request and assert the result
     assertSimpleRequest(endpoint, inputXmlFilename, expectedResultFilename);
@@ -405,7 +438,7 @@ public class SendRequestFunctionIT {
 /*                                                                          */
 /*  The Original Code is: all this file.                                    */
 /*                                                                          */
-/*  The Initial Developer of the Original Code is Adam Retter.              */
+/*  The Initial Developer of the Original Code is Evolved Binary Ltd.       */
 /*                                                                          */
 /*  Contributor(s): none.                                                   */
 /* ------------------------------------------------------------------------ */

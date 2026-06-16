@@ -17,6 +17,7 @@ import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HeaderElement;
 import org.apache.hc.core5.http.message.BasicHeader;
 import org.apache.hc.core5.http.message.MessageSupport;
+import org.expath.httpclient.BomAction;
 import org.expath.httpclient.ContentType;
 import org.expath.httpclient.HeaderSet;
 import org.expath.httpclient.HttpClientError;
@@ -64,7 +65,7 @@ public class BodyFactory {
         }
     }
 
-    public static HttpResponseBody makeResponseBody(final Result result, final ContentType type, final HttpConnection conn)
+    public static HttpResponseBody makeResponseBody(final Result result, final ContentType type, final BomAction bomAction, final HttpConnection conn)
             throws HttpClientException {
         if (type == null) {
             // it is legitimate to not have a body in a response; for instance
@@ -80,26 +81,26 @@ public class BodyFactory {
             return null;
         }
         if (t.startsWith("multipart/")) {
-            return new MultipartResponseBody(result, in, type);
+            return new MultipartResponseBody(result, in, type, bomAction);
         } else {
-            return makeResponsePart(result, null, in, type);
+            return makeResponsePart(result, null, in, type, bomAction);
         }
     }
 
     // package-level to be used within MultipartResponseBody ctor
     // TODO: Take new methods into account (XHTML, BASE64 and HEX).
-    static HttpResponseBody makeResponsePart(final Result result, final HeaderSet headers, final InputStream in, final ContentType ctype)
+    static HttpResponseBody makeResponsePart(final Result result, final HeaderSet headers, final InputStream in, final ContentType ctype, final BomAction bomAction)
             throws HttpClientException {
         switch (parseType(ctype)) {
             case XML:
                 // TODO: 'content_type' is the header Content-Type without any param
                 // (i.e. "text/xml".)  Should we keep this, or put the whole header
                 // (i.e. "text/xml; charset=utf-8")? (and for other types as well...)
-                return new XmlResponseBody(result, in, ctype, headers, false);
+                return new XmlResponseBody(result, in, ctype, bomAction, headers, false);
             case HTML:
-                return new XmlResponseBody(result, in, ctype, headers, true);
+                return new XmlResponseBody(result, in, ctype, bomAction, headers, true);
             case TEXT:
-                return new TextResponseBody(result, in, ctype, headers);
+                return new TextResponseBody(result, in, ctype, bomAction, headers);
             case BINARY:
                 return new BinaryResponseBody(result, in, ctype, headers);
             default:
@@ -278,5 +279,5 @@ public class BodyFactory {
 /*                                                                          */
 /*  The Initial Developer of the Original Code is Florent Georges.          */
 /*                                                                          */
-/*  Contributor(s): none.                                                   */
+/*  Contributor(s): Evolved Binary Ltd.                                                   */
 /* ------------------------------------------------------------------------ */

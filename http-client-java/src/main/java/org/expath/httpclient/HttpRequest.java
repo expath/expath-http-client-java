@@ -28,6 +28,7 @@ public interface HttpRequest
     public void setHttpVersion(String ver)
             throws HttpClientException;
     public void setDefaultCharset(String charset);
+    public void setBomAction(BomAction bomAction);
     public void setOverrideType(String type);
     public void setHeaders(HeaderSet headers);
     public void setBody(HttpRequestBody body)
@@ -60,5 +61,5 @@ public interface HttpRequest
 /*                                                                          */
 /*  The Initial Developer of the Original Code is Florent Georges.          */
 /*                                                                          */
-/*  Contributor(s): none.                                                   */
+/*  Contributor(s): Evolved Binary Ltd.                                     */
 /* ------------------------------------------------------------------------ */

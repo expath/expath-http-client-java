@@ -35,13 +35,14 @@ import org.expath.tools.ToolsException;
  */
 public class MultipartResponseBody implements HttpResponseBody {
 
-    public MultipartResponseBody(final Result result, final InputStream in, final ContentType type)
+    public MultipartResponseBody(final Result result, final InputStream in, final ContentType type, final BomAction bomAction)
             throws HttpClientException {
         if (type == null || type.getType() == null) {
             throw new HttpClientException(HttpClientError.HC002, "No content type");
         }
 
         myContentType = type;
+        myBomAction = bomAction;
         myParts = new ArrayList<>();
 
         myBoundary = type.getBoundary();
@@ -167,34 +168,31 @@ public class MultipartResponseBody implements HttpResponseBody {
             throw new HttpClientException(HttpClientError.HC002, "impossible to find the content type");
         }
         final ContentType type = ContentType.parse(h, null, null);
-        try {
-            switch (BodyFactory.parseType(type)) {
-                case XML: {
-                    final Reader in = parser.getReader();
-                    return new XmlResponseBody(result, in, type, headers, false);
-                }
-                case HTML: {
-                    final Reader in = parser.getReader();
-                    return new XmlResponseBody(result, in, type, headers, true);
-                }
-                case TEXT: {
-                    final Reader in = parser.getReader();
-                    return new TextResponseBody(result, in, type, headers);
-                }
-                case BINARY: {
-                    final InputStream in = parser.getInputStream();
-                    return new BinaryResponseBody(result, in, type, headers);
-                }
-                default:
-                    throw new HttpClientException(HttpClientError.HC002, "INTERNAL ERROR: cannot happen");
+        switch (BodyFactory.parseType(type)) {
+            case XML: {
+                final InputStream in = parser.getInputStream();
+                return new XmlResponseBody(result, in, type, myBomAction, headers, false);
             }
-        } catch (final UnsupportedEncodingException ex) {
-            throw new HttpClientException(HttpClientError.HC002, "Unable to parse response part", ex);
+            case HTML: {
+                final InputStream in = parser.getInputStream();
+                return new XmlResponseBody(result, in, type, myBomAction, headers, true);
+            }
+            case TEXT: {
+                final InputStream in = parser.getInputStream();
+                return new TextResponseBody(result, in, type, myBomAction, headers);
+            }
+            case BINARY: {
+                final InputStream in = parser.getInputStream();
+                return new BinaryResponseBody(result, in, type, headers);
+            }
+            default:
+                throw new HttpClientException(HttpClientError.HC002, "INTERNAL ERROR: cannot happen");
         }
     }
 
     private List<HttpResponseBody> myParts;
     private ContentType myContentType;
+    private BomAction myBomAction;
     private String myBoundary;
     private static final Logger LOG = LoggerFactory.getLogger(MultipartResponseBody.class);
 }
@@ -217,5 +215,5 @@ public class MultipartResponseBody implements HttpResponseBody {
 /*                                                                          */
 /*  The Initial Developer of the Original Code is Florent Georges.          */
 /*                                                                          */
-/*  Contributor(s): none.                                                   */
+/*  Contributor(s): Evolved Binary Ltd.                                     */
 /* ------------------------------------------------------------------------ */

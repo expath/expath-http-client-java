@@ -113,6 +113,13 @@ public class RequestParser
             else if ( "default-charset".equals(local) ) {
                 req.setDefaultCharset(a.getValue());
             }
+            else if ( "bom-action".equals(local)) {
+                try {
+                    req.setBomAction(BomAction.fromArgumentString(a.getValue()));
+                } catch (final IllegalArgumentException e) {
+                    throw new HttpClientException(HttpClientError.HC005, "Unknown http:request/@bom-action" + a.getValue());
+                }
+            }
             else if ( "override-media-type".equals(local) ) {
                 req.setOverrideType(a.getValue());
             }
@@ -298,5 +305,5 @@ public class RequestParser
 /*                                                                          */
 /*  The Initial Developer of the Original Code is Florent Georges.          */
 /*                                                                          */
-/*  Contributor(s): none.                                                   */
+/*  Contributor(s): Evolved Binary Ltd.                                     */
 /* ------------------------------------------------------------------------ */

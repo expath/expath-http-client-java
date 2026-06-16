@@ -9,15 +9,19 @@
 
 package org.expath.httpclient.impl;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import javax.annotation.Nullable;
 import javax.xml.transform.Source;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 
+import com.evolvedbinary.j8xu.BOM;
+import com.evolvedbinary.j8xu.io.BomFilterInputStream;
 import org.ccil.cowan.tagsoup.Parser;
 import org.expath.httpclient.*;
 import org.expath.httpclient.model.Result;
@@ -35,23 +39,44 @@ public class XmlResponseBody implements HttpResponseBody {
 
     public static final Charset DEFAULT_HTTP_APPLICATION_XML_CHARSET = StandardCharsets.UTF_8;
 
-    public XmlResponseBody(final Result result, final InputStream in, final ContentType type, final HeaderSet headers, final boolean html)
+    public XmlResponseBody(final Result result, InputStream in, final ContentType type, final BomAction bomAction, final HeaderSet headers, final boolean html)
             throws HttpClientException {
 
-        final Charset contentCharset;
+        Charset contentCharset;
         if (type.getCharset() != null) {
             contentCharset = Charset.forName(type.getCharset());
         } else {
             contentCharset = DEFAULT_HTTP_APPLICATION_XML_CHARSET;
         }
 
+        if (bomAction != BomAction.PRESERVE_IGNORE) {
+            final BomFilterInputStream bomIn = new BomFilterInputStream(in);
+            try {
+                @Nullable final BOM bom = bomIn.parseBom();
+
+                if (bom != null) {
+                    if (bomAction == BomAction.ERROR) {
+                        throw new HttpClientException(HttpClientError.HC002, "bom-action='error' but found BOM: " + bom.name());
+                    }
+
+                    if (bomAction == BomAction.DROP_IGNORE) {
+                        bomIn.skip(bom.getBomBytes().length);
+                    } else if (bomAction == BomAction.DROP_OVERRIDE_CHARSET) {
+                        contentCharset = bom.getCharset();
+                        bomIn.skip(bom.getBomBytes().length);
+                    } else if (bomAction == BomAction.PRESERVE_OVERRIDE_CHARSET) {
+                        contentCharset = bom.getCharset();
+                    }
+                }
+            } catch (final IOException e) {
+                throw new HttpClientException(HttpClientError.HC002, "Unable to parser BOM: " + e.getMessage(), e);
+            }
+
+            in = bomIn;
+        }
+
         final Reader reader = new InputStreamReader(in, contentCharset);
         init(result, reader, type, headers, html);
-    }
-
-    public XmlResponseBody(final Result result, final Reader in, final ContentType type, final HeaderSet headers, final boolean html)
-            throws HttpClientException {
-        init(result, in, type, headers, html);
     }
 
     private void init(final Result result, final Reader in, final ContentType type, final HeaderSet headers, final boolean html)
@@ -116,5 +141,5 @@ public class XmlResponseBody implements HttpResponseBody {
 /*                                                                          */
 /*  The Initial Developer of the Original Code is Florent Georges.          */
 /*                                                                          */
-/*  Contributor(s): none.                                                   */
+/*  Contributor(s): Evolved Binary Ltd.                                     */
 /* ------------------------------------------------------------------------ */
