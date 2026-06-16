@@ -1,7 +1,7 @@
 [![Build Status](https://github.com/expath/expath-http-client-java/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/expath/expath-http-client-java/actions/workflows/ci.yml)
 [![Java 8+](https://img.shields.io/badge/java-8%2B-blue.svg)](https://adoptopenjdk.net/)
+[![Maven Central](https://img.shields.io/maven-central/v/org.expath.http.client/http-client?logo=apachemaven&label=maven+central&color=green)](https://central.sonatype.com/search?namespace=org.expath.http.client)
 [![License](https://img.shields.io/badge/license-MPL%201.0-blue.svg)](https://www-archive.mozilla.org/mpl/MPL-1.0.txt)
-[![Maven Central](https://img.shields.io/maven-central/v/org.expath.http.client/http-client.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22org.expath.http.client%22%20AND%20a:%22http-client%22)
 
 # Java implementation of EXPath HTTP Client Module 
 
