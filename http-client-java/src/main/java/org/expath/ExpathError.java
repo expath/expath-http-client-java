@@ -1,9 +1,9 @@
 /****************************************************************************/
 /*  File:       org.expath.ExpathError.java                                 */
-/*  Author:     A. Retter - adamretter.org.uk                               */
+/*  Author:     Adam Retter - Evolved Binary Ltd                            */
 /*  Date:       2024-06-18                                                  */
 /*  Tags:                                                                   */
-/*      Copyright (c) 2024 Adam Retter (see end of file.)                   */
+/*      Copyright (c) 2024 Evolved Binary Ltd (see end of file.)            */
 /* ------------------------------------------------------------------------ */
 
 
@@ -47,7 +47,7 @@ public interface ExpathError {
 /*                                                                          */
 /*  The Original Code is: all this file.                                    */
 /*                                                                          */
-/*  The Initial Developer of the Original Code is Adam Retter.              */
+/*  The Initial Developer of the Original Code is Evolved Binary Ltd.       */
 /*                                                                          */
 /*  Contributor(s): none.                                                   */
 /* ------------------------------------------------------------------------ */
